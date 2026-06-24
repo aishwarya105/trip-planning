@@ -156,6 +156,83 @@ const HOTELS = [
     url: "https://www.booking.com/searchresults.html?ss=Antalya%2C+Turkey&nflt=class%3D4" },
 ];
 
+// ── Eat & drink (curated, top-rated picks per region) ─────────────────────
+// Hand-picked from current top-rated/most-recommended spots (2025). Each links
+// to a Google Maps search so you get live ratings, hours, photos & directions.
+//   city: "Istanbul" | "Cappadocia" | "Coast"
+//   kind: "eat" (restaurant) | "drink" (bar / pub / wine house)
+const FOODSPOTS = [
+  // ── Istanbul · eat ──
+  { id: "f-ist-karakoy", city: "Istanbul", kind: "eat", name: "Karaköy Lokantası", area: "Karaköy", cuisine: "Ottoman meze & grills", cost: "$$",
+    blurb: "A Karaköy institution under hand-painted turquoise tiles — 80+ mezes, classic Turkish mains, buzzy at lunch and dinner." },
+  { id: "f-ist-ciya", city: "Istanbul", kind: "eat", name: "Çiya Sofrası", area: "Kadıköy (Asian side)", cuisine: "Anatolian regional", cost: "$",
+    blurb: "Cult favourite reviving forgotten Anatolian dishes — pay-by-weight, brilliant for veg. Pair it with the Kadıköy food walk." },
+  { id: "f-ist-deraliye", city: "Istanbul", kind: "eat", name: "Deraliye", area: "Sultanahmet", cuisine: "Ottoman palace cuisine", cost: "$$",
+    blurb: "Documented sultans' recipes (hünkar beğendi, goose kebab) a short walk from Hagia Sophia — handy for old-city days." },
+  { id: "f-ist-murver", city: "Istanbul", kind: "eat", name: "Mürver", area: "Karaköy", cuisine: "Modern Anatolian · wood fire", cost: "$$$",
+    blurb: "Smoke-driven contemporary cooking on a rooftop with a Bosphorus view — a special-occasion dinner." },
+  { id: "f-ist-kofte", city: "Istanbul", kind: "eat", name: "Tarihi Sultanahmet Köftecisi", area: "Sultanahmet", cuisine: "Köfte", cost: "$",
+    blurb: "Since 1920 and basically two dishes — grilled köfte or lamb shish — done perfectly. The classic cheap, quick lunch." },
+  { id: "f-ist-neolokal", city: "Istanbul", kind: "eat", name: "Neolokal", area: "Galata / Karaköy", cuisine: "Contemporary Turkish (Michelin)", cost: "$$$",
+    blurb: "Regional Turkey reimagined inside SALT Galata, with sweeping Golden Horn views. Book well ahead." },
+
+  // ── Istanbul · drink ──
+  { id: "f-ist-mikla", city: "Istanbul", kind: "drink", name: "Mikla", area: "Beyoğlu", cuisine: "Rooftop bar", cost: "$$$",
+    blurb: "Sleek rooftop atop the Marmara Pera — arguably the city's best skyline view with a serious cocktail list." },
+  { id: "f-ist-360", city: "Istanbul", kind: "drink", name: "360 Istanbul", area: "Beyoğlu", cuisine: "Rooftop bar & club", cost: "$$$",
+    blurb: "The famous 360° terrace on İstiklal — drinks at sunset, turns into a party later." },
+  { id: "f-ist-bank", city: "Istanbul", kind: "drink", name: "The Bank Roof Bar", area: "Karaköy", cuisine: "Rooftop cocktails", cost: "$$$",
+    blurb: "Old-city panorama, whiskies and signature cocktails above the Bank Hotel." },
+  { id: "f-ist-balkon", city: "Istanbul", kind: "drink", name: "Balkon", area: "Asmalımescit, Beyoğlu", cuisine: "Relaxed rooftop bar", cost: "$$",
+    blurb: "Bohemian and easy-going — cold beers, jazz-to-funk and a Golden Horn view without the splurge." },
+  { id: "f-ist-komun", city: "Istanbul", kind: "drink", name: "Komün Galataport", area: "Karaköy", cuisine: "Rooftop · live music", cost: "$$",
+    blurb: "Bosphorus views and a mini-stage with local & international live sets." },
+
+  // ── Cappadocia · eat ──
+  { id: "f-cap-topdeck", city: "Cappadocia", kind: "eat", name: "Topdeck Cave Restaurant", area: "Göreme", cuisine: "Home-style Turkish", cost: "$$",
+    blurb: "Family-run cave gem — a short menu of hearty stews and meze done with love. Tiny, so reserve ahead." },
+  { id: "f-cap-pumpkin", city: "Cappadocia", kind: "eat", name: "Pumpkin Göreme", area: "Göreme", cuisine: "Set-menu Turkish + art", cost: "$$",
+    blurb: "Intimate candle-lit cavern with a fixed seasonal menu and lovely local wines. Reservations essential." },
+  { id: "f-cap-seki", city: "Cappadocia", kind: "eat", name: "Seki Restaurant (Argos)", area: "Uçhisar", cuisine: "Farm-to-table Anatolian", cost: "$$$",
+    blurb: "Garden-grown produce and lamb shank with a knockout Pigeon Valley view — the region's standout fine dining." },
+  { id: "f-cap-elai", city: "Cappadocia", kind: "eat", name: "Elai", area: "Uçhisar", cuisine: "Mediterranean-Turkish", cost: "$$$",
+    blurb: "Polished service, grills and seafood, and one of the best terrace views in Cappadocia." },
+  { id: "f-cap-bizimev", city: "Cappadocia", kind: "eat", name: "Bizim Ev", area: "Avanos", cuisine: "Avanos specialties", cost: "$$",
+    blurb: "Avanos mantı and bostan kebab in a historic stone house — pair with the pottery workshop." },
+
+  // ── Cappadocia · drink ──
+  { id: "f-cap-rupa", city: "Cappadocia", kind: "drink", name: "Rupa Bar", area: "Göreme", cuisine: "Cocktail lounge", cost: "$$",
+    blurb: "Upscale and lively in central Göreme — the cocktails are the star." },
+  { id: "f-cap-redwine", city: "Cappadocia", kind: "drink", name: "Red Red Wine House", area: "Göreme", cuisine: "Wine bar", cost: "$$",
+    blurb: "Rustic stone room lined with regional reds and whites, with meze to match. Great low-key evening." },
+  { id: "f-cap-fatboys", city: "Cappadocia", kind: "drink", name: "Fat Boys Bar", area: "Göreme", cuisine: "Laid-back bar", cost: "$",
+    blurb: "Friendly, unfussy and a traveller classic — easy drinks and good company." },
+  { id: "f-cap-kocabag", city: "Cappadocia", kind: "drink", name: "Kocabağ Winery terrace", area: "Uçhisar / Ürgüp", cuisine: "Wine tasting", cost: "$$",
+    blurb: "Sample award-winning Anatolian wines on a terrace over the vineyards — fits a relaxed afternoon." },
+
+  // ── Coast (Antalya & Fethiye) · eat ──
+  { id: "f-coast-seraser", city: "Coast", kind: "eat", name: "Seraser Fine Dining", area: "Antalya · Kaleiçi", cuisine: "Fine dining", cost: "$$$",
+    blurb: "Modern plates with traditional touches inside a 300-year-old mansion — Kaleiçi's date-night pick." },
+  { id: "f-coast-arma", city: "Coast", kind: "eat", name: "Arma Restaurant", area: "Antalya · Kaleiçi harbour", cuisine: "Seafood · Mediterranean", cost: "$$$",
+    blurb: "Seafront perch over the old harbour with famed mezes and the freshest fish." },
+  { id: "f-coast-balikci", city: "Coast", kind: "eat", name: "Balıkçı Meyhanesi", area: "Antalya · Kaleiçi", cuisine: "Meyhane · seafood", cost: "$$",
+    blurb: "Locals' favourite for fish and rakı in a cosy, tucked-away corner of the old town." },
+  { id: "f-coast-yemenli", city: "Coast", kind: "eat", name: "Yemenli Meyhanesi", area: "Antalya · Kaleiçi", cuisine: "Meyhane · grills & seafood", cost: "$$",
+    blurb: "Everything from grilled octopus to tiger prawns, with live music most nights." },
+  { id: "f-coast-fishmarket", city: "Coast", kind: "eat", name: "Fethiye Fish Market", area: "Fethiye", cuisine: "Buy-&-cook seafood", cost: "$$",
+    blurb: "Pick your fish from the central market stalls; the ring of restaurants grills it for a small fee. A fun, fresh ritual." },
+
+  // ── Coast (Antalya & Fethiye) · drink ──
+  { id: "f-coast-sheffield", city: "Coast", kind: "drink", name: "Sheffield Pub", area: "Antalya · Kaleiçi", cuisine: "Irish-style pub", cost: "$$",
+    blurb: "Guinness, craft beer and whisky in cosy dark-wood rooms — a reliable Kaleiçi hang." },
+  { id: "f-coast-tudors", city: "Coast", kind: "drink", name: "Tudors Pub", area: "Antalya · Kaleiçi", cuisine: "Live-music pub", cost: "$$",
+    blurb: "Buzzy nightly live music where locals and visitors mix. Right in the old-town lanes." },
+  { id: "f-coast-barstreet", city: "Coast", kind: "drink", name: "Paspatur Bar Street", area: "Fethiye · old town", cuisine: "Nightlife strip", cost: "$",
+    blurb: "Cobbled lane packed with bars and meyhanes — wander in and bar-hop. The heart of Fethiye nights." },
+  { id: "f-coast-deepblue", city: "Coast", kind: "drink", name: "Deep Blue Bar", area: "Fethiye", cuisine: "Live-music bar", cost: "$$",
+    blurb: "Long-running local favourite for live music, sports nights and an easy crowd." },
+];
+
 // ── Budget (per person, medium tier, ~9 nights) ───────────────────────────
 const BUDGET = {
   a: { label: "Aishwarya (from SFO)", intlFlight: 1025 },
