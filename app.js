@@ -223,6 +223,10 @@ function renderActivities() {
       <div class="city">${a.city}</div>
       <h4>${a.title}</h4>
       <p class="desc">${a.desc}</p>
+      <div class="act-links">
+        <a class="act-price" href="${tourLink(a)}" target="_blank" rel="noopener">💰 See live prices ↗</a>
+        <a class="act-price alt" href="${viatorLink(a)}" target="_blank" rel="noopener">Viator ↗</a>
+      </div>
       <div class="picks">
         <button class="pick-btn ${onA ? "on-a" : ""}" data-id="${a.id}" data-who="a">${onA ? "✓ " : ""}${esc(state.names.a)}</button>
         <button class="pick-btn ${onB ? "on-b" : ""}" data-id="${a.id}" data-who="b">${onB ? "✓ " : ""}${esc(state.names.b)}</button>
@@ -231,6 +235,19 @@ function renderActivities() {
     grid.appendChild(card);
   });
   updateMatchCounter();
+}
+// Map our region buckets to a searchable place name for tour sites
+function searchPlace(city) {
+  return { Istanbul: "Istanbul", Cappadocia: "Cappadocia", Coast: "Antalya", Anywhere: "Turkey", Detour: "Pamukkale" }[city] || "Turkey";
+}
+// Real, live price pages on the big tour marketplaces (search prefilled)
+function tourLink(a) {
+  const q = a.search || `${a.title} ${searchPlace(a.city)}`;
+  return "https://www.getyourguide.com/s/?q=" + encodeURIComponent(q);
+}
+function viatorLink(a) {
+  const q = a.search || `${a.title} ${searchPlace(a.city)}`;
+  return "https://www.viator.com/searchResults/all?text=" + encodeURIComponent(q);
 }
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 

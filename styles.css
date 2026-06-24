@@ -203,6 +203,10 @@ img { max-width: 100%; }
 .act h4 { margin: 2px 0 0; font-size: 1.05rem; font-family: "Playfair Display", serif; }
 .act .city { font-size: .78rem; color: var(--ink-soft); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
 .act .desc { font-size: .9rem; color: var(--ink-soft); flex: 1; }
+.act-links { display: flex; align-items: center; gap: 12px; margin-top: 2px; }
+.act-price { font-size: .82rem; font-weight: 700; text-decoration: none; color: var(--terra); }
+.act-price:hover { text-decoration: underline; }
+.act-price.alt { color: var(--ink-soft); font-weight: 600; }
 .act .picks { display: flex; gap: 8px; margin-top: 6px; }
 .pick-btn {
   flex: 1; border: 1.5px solid var(--line); background: var(--cream); padding: 8px; border-radius: 9px;
