@@ -68,28 +68,52 @@ function toast(msg) {
 const typeLabel = { fun: "🎉 Fun", relax: "🌿 Relax", both: "✨ Both" };
 
 // ── Card images ───────────────────────────────────────────────────────────
-// A keyword photo per card. Deterministic (locked) so it stays the same across
-// reloads, lazy-loaded, and self-hiding via imgFail() if the host is ever down.
+// Every card gets an inline SVG placeholder as its base src — it needs no
+// network, so a card is NEVER blank. Real photos (Wikimedia Commons by default,
+// or Google Places if a key is set) are fetched in the browser and swapped in
+// over the placeholder; if that ever fails, the placeholder simply stays.
 const hashStr = (s) => { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return h; };
-function imgUrl(id) {
-  const kw = (typeof IMG !== "undefined" && IMG[id]) || "";
-  if (!kw) return "";
-  const tags = kw.trim().split(/\s+/).map(encodeURIComponent).join(",");
-  const lock = (Math.abs(hashStr(id)) % 999) + 1;
-  return `https://loremflickr.com/640/420/${tags}?lock=${lock}`;
+const escSvg = (s) => String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+// A themed gradient banner with the card's icon + title. Always renders.
+function svgPlaceholder(icon, title, hue) {
+  const h = ((hue % 360) + 360) % 360;
+  const c1 = `hsl(${h},48%,44%)`, c2 = `hsl(${(h + 38) % 360},58%,28%)`;
+  const t = escSvg(String(title).slice(0, 40));
+  const svg =
+    `<svg xmlns='http://www.w3.org/2000/svg' width='640' height='420'>` +
+    `<defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>` +
+    `<stop offset='0' stop-color='${c1}'/><stop offset='1' stop-color='${c2}'/></linearGradient></defs>` +
+    `<rect width='640' height='420' fill='url(#g)'/>` +
+    `<text x='320' y='190' font-size='130' text-anchor='middle' dominant-baseline='central'>${escSvg(icon)}</text>` +
+    `<text x='320' y='320' font-size='30' fill='#fff' opacity='0.9' font-family='Georgia,serif' text-anchor='middle'>${t}</text>` +
+    `</svg>`;
+  return "data:image/svg+xml," + encodeURIComponent(svg);
 }
-function imgTag(id, alt, cls, place) {
-  const url = imgUrl(id);
-  if (!url) return "";
-  const dp = place ? ` data-place="${esc(place)}"` : "";
-  return `<img class="${cls}" loading="lazy" src="${url}" alt="${esc(alt)} photo"${dp} onerror="imgFail(this)">`;
+
+// q = Commons search keywords · place = Google Places query (used only if a key is set)
+function imgTag(id, icon, title, cls, place, q) {
+  const hue = Math.abs(hashStr(id));
+  const ph = svgPlaceholder(icon, title, hue);
+  return `<img class="${cls}" loading="lazy" src="${ph}" alt="${esc(title)} photo"` +
+    ` data-icon="${esc(icon)}" data-title="${esc(title)}" data-hue="${hue}"` +
+    (q ? ` data-q="${esc(q)}"` : "") +
+    (place ? ` data-place="${esc(place)}"` : "") +
+    ` onerror="phFail(this)">`;
 }
-// Hide a broken image and let the card fall back to its text-only layout.
-window.imgFail = function (img) {
-  const card = img.closest(".act, .food-card");
-  if (card) card.classList.add("no-img");
-  img.remove();
+
+// On a broken (swapped-in) photo, fall back to the always-working placeholder.
+window.phFail = function (img) {
+  if (String(img.getAttribute("src") || "").startsWith("data:")) return; // already placeholder
+  img.classList.remove("real-photo");
+  img.src = svgPlaceholder(img.dataset.icon || "📍", img.dataset.title || "", parseInt(img.dataset.hue || "0", 10));
 };
+
+// Route image enhancement to Google (if a key is configured) else Wikimedia.
+function enhanceImages(root) {
+  if (window.GoogleImages && GoogleImages.available) GoogleImages.enhance(root);
+  else if (window.WikiImages) WikiImages.enhance(root);
+}
 
 // ── Render: Visa ──────────────────────────────────────────────────────────
 function renderVisa() {
@@ -277,7 +301,7 @@ function renderActivities() {
     const matched = onA && onB;
     const card = el("div", `act ${matched ? "matched" : ""}`);
     card.innerHTML = `
-      ${imgTag(a.id, a.title, "act-img", `${a.title} ${searchPlace(a.city)} Turkey`)}
+      ${imgTag(a.id, a.icon, a.title, "act-img", `${a.title} ${searchPlace(a.city)} Turkey`, imgKw(a.id, `${a.title} Turkey`))}
       ${matched ? '<span class="match-flag">✨ You both want this</span>' : ""}
       <div class="top">
         <span class="icon">${a.icon}</span>
@@ -301,8 +325,10 @@ function renderActivities() {
     grid.appendChild(card);
   });
   updateMatchCounter();
-  if (window.GoogleImages) GoogleImages.enhance(grid);
+  enhanceImages(grid);
 }
+// Commons search keywords for a card id, with a sensible fallback.
+const imgKw = (id, fallback) => (typeof IMG !== "undefined" && IMG[id]) || fallback;
 // Map our region buckets to a searchable place name for tour sites
 function searchPlace(city) {
   return { Istanbul: "Istanbul", Cappadocia: "Cappadocia", Coast: "Antalya", Anywhere: "Turkey", Detour: "Pamukkale" }[city] || "Turkey";
@@ -516,8 +542,9 @@ function renderFood() {
         card.href = mapsLink(s);
         card.target = "_blank";
         card.rel = "noopener";
+        const foodIcon = s.kind === "drink" ? "🍸" : "🍽️";
         card.innerHTML = `
-          ${imgTag(s.id, s.name, "food-img", `${s.name} ${s.area.replace(/·/g, " ")} Turkey`)}
+          ${imgTag(s.id, foodIcon, s.name, "food-img", `${s.name} ${s.area.replace(/·/g, " ")} Turkey`, imgKw(s.id, `${s.cuisine} Turkey`))}
           <div class="food-top">
             <span class="food-name">${esc(s.name)}</span>
             <span class="tag cost">${s.cost}</span>
@@ -532,7 +559,7 @@ function renderFood() {
     });
     root.appendChild(block);
   });
-  if (window.GoogleImages) GoogleImages.enhance(root);
+  enhanceImages(root);
 }
 
 // ── Render: Hotels ────────────────────────────────────────────────────────

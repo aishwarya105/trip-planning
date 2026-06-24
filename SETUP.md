@@ -103,10 +103,12 @@ Lets you both edit picks and watch them update live, across devices.
 
 ---
 
-## 4. Real place photos (Google Places) — ~10 minutes
+## 4. Exact place photos (Google Places) — optional, ~10 minutes
 
-Replaces the generic keyword photos with the **actual Google photo** of each
-landmark, restaurant and bar. One key, restricted to your site.
+The cards already show **free real photos from Wikimedia Commons** with no
+setup. This optional step upgrades them to the **exact Google photo** of each
+specific restaurant, bar and landmark (sharper match for named venues). One
+key, restricted to your site.
 
 1. Go to **console.cloud.google.com** → create a project (any name).
 2. **APIs & Services → Library** → enable both:
@@ -138,7 +140,7 @@ domain-restricted means only your site can use it.*
 |------|--------------------|---------------------|
 | Live flight prices | `flightsApi` | ✅ falls back to estimates |
 | Real-time sync | `firebase` | ✅ falls back to share-links |
-| Real place photos | `googlePlacesKey` | ✅ falls back to keyword photos |
+| Exact place photos | `googlePlacesKey` | ✅ falls back to free Wikimedia photos |
 
 Nothing here costs money at this usage level. Always confirm visa rules and
 final fares on the official sites before booking.
