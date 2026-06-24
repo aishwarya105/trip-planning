@@ -191,11 +191,11 @@ img { max-width: 100%; }
 
 /* ── Activities ── */
 .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; align-items: center; }
-.filters .pill-btn {
+.pill-btn {
   border: 1.5px solid var(--line); background: var(--card); padding: 8px 15px; border-radius: 999px;
   cursor: pointer; font-weight: 600; font-size: .88rem; color: var(--ink-soft);
 }
-.filters .pill-btn.active { background: var(--teal); border-color: var(--teal); color: #fff; }
+.pill-btn.active { background: var(--teal); border-color: var(--teal); color: #fff; }
 .filters .spacer { flex: 1; }
 .match-counter { font-weight: 700; color: var(--terra); font-size: .9rem; }
 
@@ -316,10 +316,15 @@ img { max-width: 100%; }
 /* ── Map ── */
 .map-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 14px; }
 .map-controls .spacer { flex: 1; }
-.map-legend { display: inline-flex; gap: 12px; font-size: .82rem; font-weight: 700; }
-.map-legend .lg.act { color: #0e8f9e; }
-.map-legend .lg.eat { color: #d1495b; }
-.map-legend .lg.drink { color: #cf9836; }
+#map-shortlist.active { background: var(--gold); border-color: var(--gold-deep); color: var(--ink); }
+.map-legend { display: inline-flex; gap: 14px; font-size: .82rem; font-weight: 700; white-space: nowrap; }
+.map-legend .lg { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-soft); }
+.map-legend .lg::before { content: ""; width: 10px; height: 10px; border-radius: 50%; }
+.map-legend .lg.act::before { background: #0e8f9e; }
+.map-legend .lg.eat::before { background: #d1495b; }
+.map-legend .lg.drink::before { background: #cf9836; }
+.marker-cluster-small, .marker-cluster-medium, .marker-cluster-large { background: rgba(14,143,158,.25); }
+.marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div { background: var(--teal); color: #fff; font-weight: 800; }
 #trip-map { height: 460px; border-radius: var(--radius); border: 1px solid var(--line); box-shadow: var(--shadow); z-index: 0; }
 .map-fallback { display: flex; align-items: center; justify-content: center; height: 100%; padding: 24px; text-align: center; color: var(--ink-soft); background: var(--cream-2); }
 .leaflet-popup-content { font-family: inherit; font-size: .9rem; line-height: 1.45; }

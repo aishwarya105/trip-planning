@@ -12,6 +12,8 @@
   <!-- Leaflet (free, no key) for the trip map -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🇹🇷</text></svg>" />
 </head>
 <body>
@@ -244,9 +246,9 @@
         <button class="pill-btn" id="map-shortlist" title="Show only what you've picked or upvoted">★ Our shortlist</button>
         <span class="spacer"></span>
         <span class="map-legend">
-          <span class="lg act">● Activities</span>
-          <span class="lg eat">● Eat</span>
-          <span class="lg drink">● Drink</span>
+          <span class="lg act">Activities</span>
+          <span class="lg eat">Eat</span>
+          <span class="lg drink">Drink</span>
         </span>
       </div>
       <div id="trip-map"></div>
@@ -337,6 +339,7 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
           integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
   <script src="config.js"></script>
   <script src="data.js"></script>
   <script src="google-images.js"></script>
