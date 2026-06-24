@@ -103,12 +103,42 @@ Lets you both edit picks and watch them update live, across devices.
 
 ---
 
+## 4. Real place photos (Google Places) — ~10 minutes
+
+Replaces the generic keyword photos with the **actual Google photo** of each
+landmark, restaurant and bar. One key, restricted to your site.
+
+1. Go to **console.cloud.google.com** → create a project (any name).
+2. **APIs & Services → Library** → enable both:
+   - **Maps JavaScript API**
+   - **Places API (New)**
+3. **APIs & Services → Credentials → Create credentials → API key.** Copy it.
+4. **Restrict the key** (important — it's visible in the browser):
+   - **Application restrictions → Websites**, add:
+     `aishwarya105.github.io/*` (and `localhost:*` if you test locally).
+   - **API restrictions → Restrict key** → tick *Maps JavaScript API* and
+     *Places API (New)*. **Save.**
+5. **Enable billing** on the project. Google's **$200/month free credit** covers
+   far more than this planner will ever use, but the APIs require billing on.
+6. In **`config.js`** set:
+   ```js
+   googlePlacesKey: "AIza...your-key...",
+   ```
+7. Push. Cards now load each spot's real Google photo; if a lookup ever fails
+   the existing keyword photo simply stays. 📸
+
+*Cost control: in Cloud Console you can set a budget alert, and the key being
+domain-restricted means only your site can use it.*
+
+---
+
 ## Quick reference
 
 | Want | Edit in `config.js` | Stays off if blank? |
 |------|--------------------|---------------------|
 | Live flight prices | `flightsApi` | ✅ falls back to estimates |
 | Real-time sync | `firebase` | ✅ falls back to share-links |
+| Real place photos | `googlePlacesKey` | ✅ falls back to keyword photos |
 
 Nothing here costs money at this usage level. Always confirm visa rules and
 final fares on the official sites before booking.

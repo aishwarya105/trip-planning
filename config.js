@@ -23,4 +23,12 @@ const CONFIG = {
   //     appId: "1:...:web:...",
   //   },
   firebase: null,
+
+  // ── Real place photos (Google Places) ───────────────────────────────────
+  // Paste a Google Maps JavaScript API key to replace the generic keyword
+  // photos with the ACTUAL Google photo of each landmark, restaurant and bar.
+  // Enable "Maps JavaScript API" + "Places API (New)" in Google Cloud, and
+  // RESTRICT the key to your site (HTTP referrer aishwarya105.github.io/*).
+  // Leave "" to keep the free keyword images. See SETUP.md §4.
+  googlePlacesKey: "",
 };

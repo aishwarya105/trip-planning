@@ -78,10 +78,11 @@ function imgUrl(id) {
   const lock = (Math.abs(hashStr(id)) % 999) + 1;
   return `https://loremflickr.com/640/420/${tags}?lock=${lock}`;
 }
-function imgTag(id, alt, cls) {
+function imgTag(id, alt, cls, place) {
   const url = imgUrl(id);
   if (!url) return "";
-  return `<img class="${cls}" loading="lazy" src="${url}" alt="${esc(alt)} photo" onerror="imgFail(this)">`;
+  const dp = place ? ` data-place="${esc(place)}"` : "";
+  return `<img class="${cls}" loading="lazy" src="${url}" alt="${esc(alt)} photo"${dp} onerror="imgFail(this)">`;
 }
 // Hide a broken image and let the card fall back to its text-only layout.
 window.imgFail = function (img) {
@@ -199,7 +200,7 @@ function runAgent() {
   out.innerHTML = "";
   (function step() {
     if (i >= lines.length) {
-      if (window.CONFIG && CONFIG.flightsApi) appendLivePrices(date, budget);
+      if (typeof CONFIG !== "undefined" && CONFIG.flightsApi) appendLivePrices(date, budget);
       return;
     }
     out.insertAdjacentHTML("beforeend", lines[i]);
@@ -276,7 +277,7 @@ function renderActivities() {
     const matched = onA && onB;
     const card = el("div", `act ${matched ? "matched" : ""}`);
     card.innerHTML = `
-      ${imgTag(a.id, a.title, "act-img")}
+      ${imgTag(a.id, a.title, "act-img", `${a.title} ${searchPlace(a.city)} Turkey`)}
       ${matched ? '<span class="match-flag">✨ You both want this</span>' : ""}
       <div class="top">
         <span class="icon">${a.icon}</span>
@@ -300,6 +301,7 @@ function renderActivities() {
     grid.appendChild(card);
   });
   updateMatchCounter();
+  if (window.GoogleImages) GoogleImages.enhance(grid);
 }
 // Map our region buckets to a searchable place name for tour sites
 function searchPlace(city) {
@@ -515,7 +517,7 @@ function renderFood() {
         card.target = "_blank";
         card.rel = "noopener";
         card.innerHTML = `
-          ${imgTag(s.id, s.name, "food-img")}
+          ${imgTag(s.id, s.name, "food-img", `${s.name} ${s.area.replace(/·/g, " ")} Turkey`)}
           <div class="food-top">
             <span class="food-name">${esc(s.name)}</span>
             <span class="tag cost">${s.cost}</span>
@@ -530,6 +532,7 @@ function renderFood() {
     });
     root.appendChild(block);
   });
+  if (window.GoogleImages) GoogleImages.enhance(root);
 }
 
 // ── Render: Hotels ────────────────────────────────────────────────────────
