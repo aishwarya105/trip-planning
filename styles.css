@@ -294,6 +294,20 @@ img { max-width: 100%; }
 .fb-notes { display: flex; flex-direction: column; gap: 4px; }
 .fb-note-chip { font-size: .82rem; color: var(--ink-soft); background: var(--cream-2); border-radius: 8px; padding: 5px 9px; line-height: 1.35; }
 .fb-note-chip b { color: var(--ink); }
+.fb-consensus { align-self: flex-start; font-size: .76rem; font-weight: 800; color: var(--ink); background: var(--gold); border-radius: 999px; padding: 3px 11px; }
+
+/* ── Loved (vote consensus) ── */
+.loved-h { font-size: 1.05rem; margin: 16px 0 12px; display: flex; align-items: center; gap: 9px; }
+.loved-h.sub { color: var(--ink-soft); font-size: .98rem; margin-top: 26px; }
+.loved-count { background: var(--gold); color: var(--ink); font-size: .8rem; font-weight: 800; padding: 1px 10px; border-radius: 999px; }
+.loved-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.loved-grid.muted { opacity: .9; }
+.loved-chip { display: flex; align-items: center; gap: 11px; background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 12px; padding: 10px 13px; box-shadow: var(--shadow); }
+.loved-grid.muted .loved-chip { border-left-color: var(--teal); box-shadow: none; }
+.loved-icon { font-size: 1.5rem; line-height: 1; }
+.loved-name { font-weight: 700; font-size: .95rem; }
+.loved-sub { font-size: .78rem; color: var(--ink-soft); }
+.loved-empty { color: var(--ink-soft); font-style: italic; }
 .food-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .food-name { font-weight: 800; font-size: 1.05rem; line-height: 1.25; }
 .food-top .tag.cost { flex: none; font-size: .7rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; }

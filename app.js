@@ -381,6 +381,7 @@ function feedbackHtml(id) {
     .join("");
   return `
     <div class="fb">
+      ${bothLove(id) ? `<div class="fb-consensus">✨ You both love this</div>` : ""}
       <div class="fb-row">
         <button class="fb-vote up ${myVote === "up" ? "on" : ""}" data-id="${id}" data-vote="up" title="Thumbs up">👍</button>
         <button class="fb-vote down ${myVote === "down" ? "on" : ""}" data-id="${id}" data-vote="down" title="Thumbs down">👎</button>
@@ -399,6 +400,7 @@ function setVote(id, who, vote) {
   save();
   renderActivities();
   renderFood();
+  renderLoved();
   pushSync({ votes: { [id]: { [who]: (state.votes[id] && state.votes[id][who]) || null } } });
 }
 
@@ -411,7 +413,68 @@ function setNote(id, who, text) {
   save();
   renderActivities();
   renderFood();
+  renderLoved();
   pushSync({ notes: { [id]: { [who]: text.trim() ? text : null } } });
+}
+
+// ── Vote helpers + the "loved" summary ────────────────────────────────────
+const voteVal = (v) => (v === "up" ? 1 : v === "down" ? -1 : 0);
+const voteScore = (id) => { const v = state.votes[id] || {}; return voteVal(v.a) + voteVal(v.b); };
+const bothLove = (id) => { const v = state.votes[id] || {}; return v.a === "up" && v.b === "up"; };
+const likedByOne = (id) => { const v = state.votes[id] || {}; return !bothLove(id) && (v.a === "up" || v.b === "up"); };
+
+// Resolve a place id (activity OR eatery) to a display label/icon/sub.
+function placeInfo(id) {
+  const a = ACTIVITIES.find((x) => x.id === id);
+  if (a) return { icon: a.icon, label: a.title, sub: a.city };
+  const f = FOODSPOTS.find((x) => x.id === id);
+  if (f) return { icon: f.kind === "drink" ? "🍸" : "🍽️", label: f.name, sub: f.area };
+  return null;
+}
+// Stable ordering: activities first (authoring order), then eateries.
+const placeOrder = (id) => {
+  const i = ACTIVITIES.findIndex((x) => x.id === id);
+  return i >= 0 ? i : 1000 + FOODSPOTS.findIndex((x) => x.id === id);
+};
+
+function lovedChip(id, subOverride) {
+  const p = placeInfo(id);
+  if (!p) return "";
+  return `<div class="loved-chip">
+      <span class="loved-icon">${p.icon}</span>
+      <div><div class="loved-name">${esc(p.label)}</div>
+      <div class="loved-sub">${esc(subOverride || p.sub)}</div></div>
+    </div>`;
+}
+
+function renderLoved() {
+  const root = $("#loved-body");
+  if (!root) return;
+  const ids = Object.keys(state.votes);
+  const both = ids.filter(bothLove).sort((x, y) => placeOrder(x) - placeOrder(y));
+  const one = ids.filter(likedByOne).sort((x, y) => placeOrder(x) - placeOrder(y));
+
+  if (!both.length && !one.length) {
+    root.innerHTML = `<p class="loved-empty">No votes yet — give places a 👍 in <b>Activities</b> and <b>Eat &amp; drink</b>, and the ones you <b>both</b> love will collect here. ❤️</p>`;
+    return;
+  }
+  let html =
+    `<h3 class="loved-h">✨ You both love these <span class="loved-count">${both.length}</span></h3>` +
+    (both.length
+      ? `<div class="loved-grid">${both.map((id) => lovedChip(id)).join("")}</div>`
+      : `<p class="loved-empty">Nothing you both 👍'd <i>yet</i> — agree on a spot and it'll shine here.</p>`);
+  if (one.length) {
+    html +=
+      `<h3 class="loved-h sub">👍 Liked by one of you</h3>` +
+      `<div class="loved-grid muted">${one
+        .map((id) => {
+          const who = state.votes[id].a === "up" ? state.names.a : state.names.b;
+          const p = placeInfo(id);
+          return lovedChip(id, `${who} 👍 · ${p ? p.sub : ""}`);
+        })
+        .join("")}</div>`;
+  }
+  root.innerHTML = html;
 }
 // Map our region buckets to a searchable place name for tour sites
 function searchPlace(city) {
@@ -595,6 +658,7 @@ function renderItinerary() {
 // ── Render: Eat & drink ───────────────────────────────────────────────────
 let eatRegion = "all";
 let eatKind = "all";
+let eatSort = "default"; // "default" | "top" (highest-voted first)
 const REGION_ORDER = ["Istanbul", "Cappadocia", "Coast"];
 const mapsLink = (s) =>
   "https://www.google.com/maps/search/?api=1&query=" +
@@ -615,8 +679,15 @@ function renderFood() {
     block.innerHTML = `<h3 class="eat-region-title">${region}</h3>`;
 
     groups.forEach((kind) => {
-      const list = inRegion.filter((s) => s.kind === kind);
+      let list = inRegion.filter((s) => s.kind === kind);
       if (!list.length) return;
+      if (eatSort === "top") {
+        // highest combined vote first; keep original order within ties
+        list = list
+          .map((s, i) => [s, i])
+          .sort((A, B) => voteScore(B[0].id) - voteScore(A[0].id) || A[1] - B[1])
+          .map((pair) => pair[0]);
+      }
       const head = kind === "eat" ? "🍽 Restaurants" : "🍸 Bars &amp; pubs";
       const sub = el("div", "eat-sub");
       sub.innerHTML = `<div class="eat-sub-title">${head}</div>`;
@@ -721,6 +792,7 @@ function init() {
   renderFlights();
   renderActivities();
   renderItinerary();
+  renderLoved();
   renderFood();
   renderHotels();
   renderBudget();
@@ -771,11 +843,11 @@ function init() {
     })
   );
 
-  // eat & drink filters (region + kind)
-  document.querySelectorAll("#eat-filters > .pill-btn").forEach((b) =>
+  // eat & drink filters (region + kind) — only the region buttons carry data-f
+  document.querySelectorAll("#eat-filters > .pill-btn[data-f]").forEach((b) =>
     b.addEventListener("click", () => {
       eatRegion = b.dataset.f;
-      document.querySelectorAll("#eat-filters > .pill-btn").forEach((x) => x.classList.toggle("active", x === b));
+      document.querySelectorAll("#eat-filters > .pill-btn[data-f]").forEach((x) => x.classList.toggle("active", x === b));
       renderFood();
     })
   );
@@ -786,6 +858,13 @@ function init() {
       renderFood();
     })
   );
+  // sort the eatery list by your combined votes
+  $("#eat-sort").addEventListener("click", () => {
+    eatSort = eatSort === "top" ? "default" : "top";
+    $("#eat-sort").classList.toggle("active", eatSort === "top");
+    $("#eat-sort").textContent = eatSort === "top" ? "⭐ Top-rated first ✓" : "⭐ Top-rated first";
+    renderFood();
+  });
 
   // agent
   $("#agent-run").addEventListener("click", runAgent);
@@ -800,6 +879,7 @@ function init() {
       save();
       renderActivities();
       renderFood();
+      renderLoved();
       renderItinerary();
       toast("All picks, votes & notes cleared");
       pushSync({ picks: { a: [], b: [] }, votes: {}, notes: {} });
@@ -912,6 +992,7 @@ function refreshNames() {
   renderVisa();
   renderActivities();
   renderFood();
+  renderLoved();
   renderItinerary();
   renderBudget();
 }
