@@ -318,34 +318,142 @@ function mutualPicks() {
 }
 
 // ── Render: Itinerary ─────────────────────────────────────────────────────
+// Turns the flat list of picks into a paced, day-by-day plan: each leg's days
+// get a morning / afternoon / evening slot, picks drop into the slot that fits,
+// mutual picks win the scarce slots first, and anything that won't fit is
+// surfaced as a gentle "you've picked a bit too much here" nudge.
+
+const SLOTS = [
+  { key: "morning", label: "Morning", time: "9:00 AM", icon: "🌅" },
+  { key: "afternoon", label: "Afternoon", time: "1:00 PM", icon: "☀️" },
+  { key: "evening", label: "Evening", time: "7:00 PM", icon: "🌆" },
+];
+
+const isMatched = (a) => state.picks.a.includes(a.id) && state.picks.b.includes(a.id);
+const isPicked = (a) => state.picks.a.includes(a.id) || state.picks.b.includes(a.id);
+const whoWants = (a) => {
+  const onA = state.picks.a.includes(a.id), onB = state.picks.b.includes(a.id);
+  if (onA && onB) return "both";
+  return onA ? "a" : "b";
+};
+
+// Place one leg's picked activities into a fixed number of day grids.
+// Returns { days:[{morning,afternoon,evening}], overflow:[acts] }.
+function scheduleLeg(leg) {
+  const acts = ACTIVITIES.filter((a) => isPicked(a) && leg.activityCities.includes(a.city));
+  // Mutual picks first (they get the scarce slots), then keep authoring order.
+  acts.sort((x, y) => (isMatched(y) - isMatched(x)) || (ACTIVITIES.indexOf(x) - ACTIVITIES.indexOf(y)));
+
+  const days = Array.from({ length: leg.dayCount }, () => ({ morning: null, afternoon: null, evening: null }));
+  const overflow = [];
+  const free = (d, k) => d[k] === null;
+
+  for (const a of acts) {
+    if (!place(days, a, free)) overflow.push(a);
+  }
+  return { days, overflow };
+}
+
+// Try to seat an activity in the earliest day that has room for its slot.
+function place(days, a, free) {
+  const order =
+    a.slot === "fullday" ? null :
+    a.slot === "any" ? ["afternoon", "morning", "evening"] :
+    [a.slot];
+
+  if (a.slot === "fullday") {
+    const d = days.find((d) => free(d, "morning") && free(d, "afternoon"));
+    if (!d) return false;
+    d.morning = a; d.afternoon = a; d.fullday = a.id; // same ref in both → rendered once
+    return true;
+  }
+  for (const k of order) {
+    const d = days.find((d) => free(d, k));
+    if (d) { d[k] = a; return true; }
+  }
+  return false;
+}
+
 function renderItinerary() {
   const root = $("#timeline");
   root.innerHTML = "";
-  const chosen = ACTIVITIES.filter((a) => state.picks.a.includes(a.id) || state.picks.b.includes(a.id));
+
+  const totalPicked = ACTIVITIES.filter(isPicked).length;
+  let totalOverflow = 0;
+  const legBlocks = [];
 
   ITINERARY.forEach((leg) => {
-    const legActs = chosen.filter((a) => leg.activityCities.includes(a.city));
-    const item = el("div", "tl-item");
-    const picksHtml = legActs.length
-      ? legActs
-          .map((a) => {
-            const matched = state.picks.a.includes(a.id) && state.picks.b.includes(a.id);
-            return `<span class="tl-pick ${matched ? "match" : ""}">${a.icon} ${a.title}${matched ? " ✨" : ""}</span>`;
-          })
-          .join("")
-      : `<span class="tl-empty">No picks here yet — choose some activities above.</span>`;
-    item.innerHTML = `
-      <div class="tl-when">
-        <div class="day">${leg.day}</div>
-        <div class="tag">${leg.tag}</div>
-      </div>
-      <div class="tl-body">
-        <h3>${leg.city}</h3>
+    if (leg.dayCount === 0) {
+      // travel / fly-home leg: keep it as a simple note
+      legBlocks.push(`
+        <div class="tl-leg">
+          <div class="tl-leg-head"><h3>${leg.city}</h3><span class="tl-leg-tag">${leg.tag}</span></div>
+          <p class="blurb">${leg.blurb}</p>
+        </div>`);
+      return;
+    }
+
+    const { days, overflow } = scheduleLeg(leg);
+    totalOverflow += overflow.length;
+
+    const dayCards = days.map((d, i) => {
+      const rows = SLOTS.map((s) => {
+        const a = d[s.key];
+        if (!a) return `
+          <div class="slot empty">
+            <span class="slot-when">${s.icon} ${s.label}</span>
+            <span class="slot-free">Open — keep it free or add a pick</span>
+          </div>`;
+        // skip the second half of a full-day activity (it lives in morning+afternoon)
+        if (d.fullday === a.id && s.key === "afternoon") return "";
+        const span = d.fullday === a.id && s.key === "morning";
+        const who = whoWants(a);
+        const tag = who === "both"
+          ? `<span class="slot-who both">✨ both</span>`
+          : `<span class="slot-who ${who}">${esc(state.names[who])}</span>`;
+        return `
+          <div class="slot filled ${isMatched(a) ? "match" : ""}">
+            <span class="slot-when">${s.icon} ${span ? "All day" : s.label}<small>${a.timeHint || s.time}</small></span>
+            <span class="slot-act">${a.icon} ${a.title} ${tag}</span>
+          </div>`;
+      }).join("");
+      return `
+        <div class="day-card">
+          <div class="day-card-head">Day ${i + 1}</div>
+          <div class="slots">${rows}</div>
+        </div>`;
+    }).join("");
+
+    const overflowHtml = overflow.length ? `
+      <div class="overflow-note">
+        <b>⚠️ ${overflow.length} pick${overflow.length === 1 ? "" : "s"} won't fit ${leg.city}'s ${leg.dayCount} day${leg.dayCount === 1 ? "" : "s"}.</b>
+        That's a packed leg — to keep it relaxed, drop one or move it elsewhere:
+        <div class="overflow-list">
+          ${overflow.map((a) => `<span class="tl-pick over">${a.icon} ${a.title}${isMatched(a) ? " ✨" : ""}</span>`).join("")}
+        </div>
+      </div>` : "";
+
+    const anyPick = days.some((d) => d.morning || d.afternoon || d.evening);
+    legBlocks.push(`
+      <div class="tl-leg">
+        <div class="tl-leg-head">
+          <h3>${leg.city}</h3>
+          <span class="tl-leg-tag">${leg.tag} · ${leg.day}</span>
+        </div>
         <p class="blurb">${leg.blurb}</p>
-        <div class="tl-picks">${picksHtml}</div>
-      </div>`;
-    root.appendChild(item);
+        ${anyPick ? `<div class="day-grid">${dayCards}</div>` : `<p class="tl-empty">No picks here yet — choose some ${leg.city} activities above and they'll slot into days automatically.</p>`}
+        ${overflowHtml}
+      </div>`);
   });
+
+  // Headline summary: how full is the plan, and is it over-stuffed?
+  const banner = totalPicked === 0
+    ? `<div class="plan-banner"><b>Your itinerary builds itself here.</b> Start picking activities above — each one drops into the right leg and time of day, and I'll warn you if a leg gets too packed.</div>`
+    : totalOverflow > 0
+    ? `<div class="plan-banner warn"><b>${totalPicked} picks scheduled — but ${totalOverflow} couldn't fit.</b> A couple of legs are over-booked (flagged below). Trim those and you'll have a relaxed, well-paced trip.</div>`
+    : `<div class="plan-banner ok"><b>${totalPicked} picks, all scheduled ✨</b> Nicely paced — every day has breathing room. Add more if you like; I'll tell you when a leg fills up.</div>`;
+
+  root.innerHTML = banner + legBlocks.join("");
 }
 
 // ── Render: Hotels ────────────────────────────────────────────────────────
