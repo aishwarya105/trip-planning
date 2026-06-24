@@ -11,6 +11,8 @@ const defaultState = () => ({
   dates: { start: TRIP.defaultDates.start, end: TRIP.defaultDates.end },
   who: "a",
   picks: { a: [], b: [] }, // arrays of activity ids
+  votes: {}, // { [placeId]: { a: "up"|"down", b: "up"|"down" } }
+  notes: {}, // { [placeId]: { a: "text", b: "text" } }
 });
 
 let state = load();
@@ -19,7 +21,11 @@ let state = load();
 function load() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORE_KEY));
-    if (saved) return { ...defaultState(), ...saved, picks: { ...{ a: [], b: [] }, ...saved.picks } };
+    if (saved) return {
+      ...defaultState(), ...saved,
+      picks: { ...{ a: [], b: [] }, ...saved.picks },
+      votes: { ...saved.votes }, notes: { ...saved.notes },
+    };
   } catch (_) {}
   return defaultState();
 }
@@ -34,13 +40,19 @@ function applyIncomingShare() {
   if (!raw) return;
   try {
     const data = JSON.parse(decodeURIComponent(escape(atob(raw))));
-    // data: { who:'a'|'b', name, picks:[ids] }
+    // data: { who:'a'|'b', name, picks:[ids], votes:{id:vote}, notes:{id:text} }
     if (data.who === "a" || data.who === "b") {
       state.picks[data.who] = Array.from(new Set([...(state.picks[data.who] || []), ...(data.picks || [])]));
       if (data.name) state.names[data.who] = data.name;
+      Object.entries(data.votes || {}).forEach(([id, vote]) => {
+        (state.votes[id] || (state.votes[id] = {}))[data.who] = vote;
+      });
+      Object.entries(data.notes || {}).forEach(([id, text]) => {
+        (state.notes[id] || (state.notes[id] = {}))[data.who] = text;
+      });
       save();
       const other = data.who === "a" ? state.names.a : state.names.b;
-      setTimeout(() => toast(`Merged ${other}'s picks ✨`), 600);
+      setTimeout(() => toast(`Merged ${other}'s picks, votes & notes ✨`), 600);
     }
   } catch (e) {
     console.warn("Could not read share link", e);
@@ -339,6 +351,7 @@ function renderActivities() {
         <button class="pick-btn ${onA ? "on-a" : ""}" data-id="${a.id}" data-who="a">${onA ? "✓ " : ""}${esc(state.names.a)}</button>
         <button class="pick-btn ${onB ? "on-b" : ""}" data-id="${a.id}" data-who="b">${onB ? "✓ " : ""}${esc(state.names.b)}</button>
       </div>
+      ${feedbackHtml(a.id)}
     `;
     grid.appendChild(card);
   });
@@ -347,6 +360,59 @@ function renderActivities() {
 }
 // Commons search keywords for a card id, with a sensible fallback.
 const imgKw = (id, fallback) => (typeof IMG !== "undefined" && IMG[id]) || fallback;
+
+// ── Votes & notes (per place, per traveler) ───────────────────────────────
+// A 👍/👎 vote and a short note each of you can leave on any activity or
+// eatery. Stored in state, saved locally, carried in the share link, and
+// synced live via Firebase — so you can both refer back to them later.
+function feedbackHtml(id) {
+  const who = state.who;
+  const v = state.votes[id] || {};
+  const n = state.notes[id] || {};
+  const myVote = v[who] || "";
+  const myNote = n[who] || "";
+  const voteChips = ["a", "b"]
+    .filter((k) => v[k])
+    .map((k) => `<span class="fb-tag ${v[k]}">${esc(state.names[k])} ${v[k] === "up" ? "👍" : "👎"}</span>`)
+    .join("");
+  const noteChips = ["a", "b"]
+    .filter((k) => n[k] && n[k].trim())
+    .map((k) => `<div class="fb-note-chip"><b>${esc(state.names[k])}:</b> ${esc(n[k])}</div>`)
+    .join("");
+  return `
+    <div class="fb">
+      <div class="fb-row">
+        <button class="fb-vote up ${myVote === "up" ? "on" : ""}" data-id="${id}" data-vote="up" title="Thumbs up">👍</button>
+        <button class="fb-vote down ${myVote === "down" ? "on" : ""}" data-id="${id}" data-vote="down" title="Thumbs down">👎</button>
+        <input class="fb-note" data-id="${id}" maxlength="140" placeholder="Note as ${esc(state.names[who])}…" value="${esc(myNote)}">
+      </div>
+      ${voteChips ? `<div class="fb-tags">${voteChips}</div>` : ""}
+      ${noteChips ? `<div class="fb-notes">${noteChips}</div>` : ""}
+    </div>`;
+}
+
+function setVote(id, who, vote) {
+  const cur = state.votes[id] || (state.votes[id] = {});
+  if (cur[who] === vote) delete cur[who]; // click again to clear
+  else cur[who] = vote;
+  if (!cur.a && !cur.b) delete state.votes[id];
+  save();
+  renderActivities();
+  renderFood();
+  pushSync({ votes: { [id]: { [who]: (state.votes[id] && state.votes[id][who]) || null } } });
+}
+
+function setNote(id, who, text) {
+  text = (text || "").slice(0, 140);
+  const cur = state.notes[id] || (state.notes[id] = {});
+  if (text.trim()) cur[who] = text;
+  else delete cur[who];
+  if (!cur.a && !cur.b) delete state.notes[id];
+  save();
+  renderActivities();
+  renderFood();
+  pushSync({ notes: { [id]: { [who]: text.trim() ? text : null } } });
+}
 // Map our region buckets to a searchable place name for tour sites
 function searchPlace(city) {
   return { Istanbul: "Istanbul", Cappadocia: "Cappadocia", Coast: "Antalya", Anywhere: "Turkey", Detour: "Pamukkale" }[city] || "Turkey";
@@ -556,20 +622,21 @@ function renderFood() {
       sub.innerHTML = `<div class="eat-sub-title">${head}</div>`;
       const grid = el("div", "eat-grid");
       list.forEach((s) => {
-        const card = el("a", `food-card ${s.kind}`);
-        card.href = mapsLink(s);
-        card.target = "_blank";
-        card.rel = "noopener";
+        const card = el("div", `food-card ${s.kind}`);
+        const url = mapsLink(s);
         const foodIcon = s.kind === "drink" ? "🍸" : "🍽️";
         card.innerHTML = `
-          ${imgTag(s.id, foodIcon, s.name, "food-img", `${s.name} ${s.area.replace(/·/g, " ")} Turkey`, imgKw(s.id, `${s.cuisine} Turkey`))}
+          <a class="food-imglink" href="${url}" target="_blank" rel="noopener">
+            ${imgTag(s.id, foodIcon, s.name, "food-img", `${s.name} ${s.area.replace(/·/g, " ")} Turkey`, imgKw(s.id, `${s.cuisine} Turkey`))}
+          </a>
           <div class="food-top">
             <span class="food-name">${esc(s.name)}</span>
             <span class="tag cost">${s.cost}</span>
           </div>
           <div class="food-meta">${esc(s.area)} · ${esc(s.cuisine)}</div>
           <p class="food-blurb">${esc(s.blurb)}</p>
-          <span class="food-link">📍 Open in Maps ↗</span>`;
+          <a class="food-link" href="${url}" target="_blank" rel="noopener">📍 Open in Maps ↗</a>
+          ${feedbackHtml(s.id)}`;
         grid.appendChild(card);
       });
       sub.appendChild(grid);
@@ -616,12 +683,16 @@ function renderBudget() {
 // ── Share link ────────────────────────────────────────────────────────────
 function makeShareLink() {
   const who = state.who;
-  const payload = { who, name: state.names[who], picks: state.picks[who] };
+  // gather just this traveler's votes & notes
+  const myVotes = {}, myNotes = {};
+  Object.keys(state.votes).forEach((id) => { if (state.votes[id][who]) myVotes[id] = state.votes[id][who]; });
+  Object.keys(state.notes).forEach((id) => { if (state.notes[id][who]) myNotes[id] = state.notes[id][who]; });
+  const payload = { who, name: state.names[who], picks: state.picks[who], votes: myVotes, notes: myNotes };
   const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
   const url = `${location.origin}${location.pathname}?s=${encoded}`;
   const friend = who === "a" ? state.names.b : state.names.a;
-  if (!state.picks[who].length) {
-    toast("Pick a few activities first!");
+  if (!state.picks[who].length && !Object.keys(myVotes).length && !Object.keys(myNotes).length) {
+    toast("Add some picks, votes or notes first!");
     return;
   }
   navigator.clipboard.writeText(url).then(
@@ -680,11 +751,25 @@ function init() {
     })
   );
 
-  // activity picks (event delegation)
+  // activity picks + votes (event delegation)
   $("#act-grid").addEventListener("click", (e) => {
-    const btn = e.target.closest(".pick-btn");
-    if (btn) togglePick(btn.dataset.id, btn.dataset.who);
+    const pick = e.target.closest(".pick-btn");
+    if (pick) { togglePick(pick.dataset.id, pick.dataset.who); return; }
+    const vote = e.target.closest(".fb-vote");
+    if (vote) setVote(vote.dataset.id, state.who, vote.dataset.vote);
   });
+  // eatery votes (event delegation)
+  $("#eat-list").addEventListener("click", (e) => {
+    const vote = e.target.closest(".fb-vote");
+    if (vote) setVote(vote.dataset.id, state.who, vote.dataset.vote);
+  });
+  // notes on both activities and eateries (fires on blur / enter)
+  ["#act-grid", "#eat-list"].forEach((sel) =>
+    $(sel).addEventListener("change", (e) => {
+      const note = e.target.closest(".fb-note");
+      if (note) setNote(note.dataset.id, state.who, note.value);
+    })
+  );
 
   // eat & drink filters (region + kind)
   document.querySelectorAll("#eat-filters > .pill-btn").forEach((b) =>
@@ -708,13 +793,16 @@ function init() {
   // share + reset
   $("#share-btn").addEventListener("click", makeShareLink);
   $("#reset-btn").addEventListener("click", () => {
-    if (confirm("Clear all picks for both travelers?")) {
+    if (confirm("Clear all picks, votes and notes for both travelers?")) {
       state.picks = { a: [], b: [] };
+      state.votes = {};
+      state.notes = {};
       save();
       renderActivities();
+      renderFood();
       renderItinerary();
-      toast("All picks cleared");
-      pushSync({ picks: { a: [], b: [] } });
+      toast("All picks, votes & notes cleared");
+      pushSync({ picks: { a: [], b: [] }, votes: {}, notes: {} });
     }
   });
 
@@ -783,7 +871,7 @@ function setupSync() {
     if (!code) { toast("Type a trip code first"); return; }
     await window.TripSync.join(code);
     // seed the room with whatever we have locally
-    pushSync({ names: state.names, picks: state.picks });
+    pushSync({ names: state.names, picks: state.picks, votes: state.votes, notes: state.notes });
     const link = `${location.origin}${location.pathname}?room=${encodeURIComponent(code.toLowerCase())}`;
     history.replaceState({}, "", link + location.hash);
     toast(`Live trip “${code}” started 🔄`);
@@ -810,16 +898,20 @@ function applyRemoteState(data) {
   if (!data) return;
   if (data.names) state.names = { ...state.names, ...data.names };
   if (data.picks) state.picks = { a: data.picks.a || state.picks.a, b: data.picks.b || state.picks.b };
+  // deep-merge per place so neither traveler's vote/note is lost
+  if (data.votes) Object.entries(data.votes).forEach(([id, v]) => { state.votes[id] = { ...(state.votes[id] || {}), ...v }; });
+  if (data.notes) Object.entries(data.notes).forEach(([id, n]) => { state.notes[id] = { ...(state.notes[id] || {}), ...n }; });
   save();
   syncSetupInputs();
   refreshNames();
   renderItinerary();
 }
 
-// re-render the spots where traveler names appear
+// re-render the spots where traveler names / votes / notes appear
 function refreshNames() {
   renderVisa();
   renderActivities();
+  renderFood();
   renderItinerary();
   renderBudget();
 }
