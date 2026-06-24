@@ -91,14 +91,18 @@ function svgPlaceholder(icon, title, hue) {
   return "data:image/svg+xml," + encodeURIComponent(svg);
 }
 
-// q = Commons search keywords · place = Google Places query (used only if a key is set)
+// q = Commons search keywords · place = Google Places query (used only if a key
+// is set). A pinned exact photo (IMG_PIN[id]) overrides both.
 function imgTag(id, icon, title, cls, place, q) {
   const hue = Math.abs(hashStr(id));
   const ph = svgPlaceholder(icon, title, hue);
+  const pin = (typeof IMG_PIN !== "undefined" && IMG_PIN[id]) || "";
+  const src = pin
+    ? ` data-pin="${esc(pin)}"`
+    : (q ? ` data-q="${esc(q)}"` : "") + (place ? ` data-place="${esc(place)}"` : "");
   return `<img class="${cls}" loading="lazy" src="${ph}" alt="${esc(title)} photo"` +
     ` data-icon="${esc(icon)}" data-title="${esc(title)}" data-hue="${hue}"` +
-    (q ? ` data-q="${esc(q)}"` : "") +
-    (place ? ` data-place="${esc(place)}"` : "") +
+    src +
     ` onerror="phFail(this)">`;
 }
 
@@ -109,8 +113,22 @@ window.phFail = function (img) {
   img.src = svgPlaceholder(img.dataset.icon || "📍", img.dataset.title || "", parseInt(img.dataset.hue || "0", 10));
 };
 
-// Route image enhancement to Google (if a key is configured) else Wikimedia.
+// Swap in a pinned exact photo, keeping the placeholder if it fails to load.
+function applyPins(root) {
+  (root || document).querySelectorAll("img[data-pin]").forEach((img) => {
+    if (img.dataset.pinned) return;
+    img.dataset.pinned = "1";
+    const url = img.getAttribute("data-pin");
+    const probe = new window.Image();
+    probe.onload = () => { if (img.isConnected) { img.src = url; img.classList.add("real-photo"); } };
+    probe.src = url;
+  });
+}
+
+// Route image enhancement: pinned photos first, then Google (if a key is
+// configured) else Wikimedia for the rest.
 function enhanceImages(root) {
+  applyPins(root);
   if (window.GoogleImages && GoogleImages.available) GoogleImages.enhance(root);
   else if (window.WikiImages) WikiImages.enhance(root);
 }

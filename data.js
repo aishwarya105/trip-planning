@@ -296,6 +296,15 @@ const IMG = {
   "f-coast-deepblue": "beach bar night",
 };
 
+// ── Pinned exact photos (override the keyword search for specific cards) ───
+// When a card's auto-matched photo isn't great, pin an exact freely-licensed
+// image here by id. Special:FilePath redirects to the real Commons image and
+// takes a ?width= param, so these load directly in the browser.
+const IMG_PIN = {
+  // Kadıköy street-food tour → lahmacun being made in Kadıköy (Wikimedia Commons)
+  "ist-food": "https://commons.wikimedia.org/wiki/Special:FilePath/Lahmacun%20in%20Kadikoy.JPG?width=640",
+};
+
 // ── Budget (per person, medium tier, ~9 nights) ───────────────────────────
 const BUDGET = {
   a: { label: "Aishwarya (from SFO)", intlFlight: 1025 },
