@@ -276,7 +276,24 @@ img { max-width: 100%; }
 .food-card { display: flex; flex-direction: column; gap: 6px; background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--teal); border-radius: 14px; padding: 15px 16px; box-shadow: var(--shadow); text-decoration: none; color: var(--ink); transition: transform .12s ease, box-shadow .12s ease; }
 .food-card.drink { border-left-color: var(--terra); }
 .food-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.food-imglink { display: block; line-height: 0; text-decoration: none; }
 .food-img { width: calc(100% + 32px); height: 140px; object-fit: cover; display: block; margin: -15px -16px 10px; border-radius: 11px 11px 0 0; background: var(--cream-2); }
+
+/* ── Votes & notes ── */
+.fb { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: 8px; }
+.fb-row { display: flex; align-items: center; gap: 6px; }
+.fb-vote { border: 1.5px solid var(--line); background: var(--cream); border-radius: 9px; padding: 5px 9px; cursor: pointer; font-size: .95rem; line-height: 1; }
+.fb-vote.up.on { border-color: var(--good); background: var(--good-bg); }
+.fb-vote.down.on { border-color: var(--terra); background: #fdecec; }
+.fb-note { flex: 1; min-width: 0; border: 1.5px solid var(--line); background: #fff; border-radius: 9px; padding: 6px 9px; font: inherit; font-size: .82rem; color: var(--ink); }
+.fb-note:focus { outline: none; border-color: var(--teal); }
+.fb-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.fb-tag { font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+.fb-tag.up { background: var(--good-bg); color: var(--good); }
+.fb-tag.down { background: #fdecec; color: var(--terra); }
+.fb-notes { display: flex; flex-direction: column; gap: 4px; }
+.fb-note-chip { font-size: .82rem; color: var(--ink-soft); background: var(--cream-2); border-radius: 8px; padding: 5px 9px; line-height: 1.35; }
+.fb-note-chip b { color: var(--ink); }
 .food-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .food-name { font-weight: 800; font-size: 1.05rem; line-height: 1.25; }
 .food-top .tag.cost { flex: none; font-size: .7rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
