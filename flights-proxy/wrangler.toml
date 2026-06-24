@@ -1,0 +1,14 @@
+# Cloudflare Worker config for the flight price proxy.
+# Deploy with the Wrangler CLI:  npx wrangler deploy
+# (or skip this file entirely and paste worker.js into the Cloudflare dashboard)
+
+name = "turkiye-flights"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+# Secrets are NOT stored here. Set them once after first deploy:
+#   npx wrangler secret put AMADEUS_KEY
+#   npx wrangler secret put AMADEUS_SECRET
+# Optional (defaults to "test"):
+[vars]
+AMADEUS_ENV = "test"
