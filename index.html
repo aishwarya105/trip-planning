@@ -22,6 +22,7 @@
         <a href="#flights">Flights</a>
         <a href="#activities">Activities</a>
         <a href="#itinerary">Itinerary</a>
+        <a href="#eat">Eat &amp; drink</a>
         <a href="#stay">Stay</a>
         <a href="#budget">Budget</a>
       </div>
@@ -181,6 +182,30 @@
       <h2>Our itinerary</h2>
       <p class="lead">A relaxed 9-night loop — Istanbul → Cappadocia → the coast. As you both pick, each activity drops into the right leg <em>and the right time of day</em> — morning, afternoon or evening. Gold ✨ is the stuff you both chose, and I'll warn you if a leg gets over-stuffed so the trip stays relaxed.</p>
       <div class="timeline" id="timeline"></div>
+    </div>
+  </section>
+
+  <!-- ── Eat & drink ── -->
+  <section class="section" id="eat">
+    <div class="wrap">
+      <span class="kicker">Where to eat &amp; drink</span>
+      <h2>Top-rated tables &amp; bars</h2>
+      <p class="lead">A curated short-list of the best-reviewed restaurants and bars/pubs in each region — so you're never stuck Googling “where to eat” at 8pm. Every spot opens in Google Maps with live ratings, hours and directions.</p>
+
+      <div class="filters" id="eat-filters">
+        <button class="pill-btn active" data-f="all">All regions</button>
+        <button class="pill-btn" data-f="Istanbul">Istanbul</button>
+        <button class="pill-btn" data-f="Cappadocia">Cappadocia</button>
+        <button class="pill-btn" data-f="Coast">Coast</button>
+        <span class="spacer"></span>
+        <span class="kind-toggle" id="eat-kind">
+          <button class="pill-btn active" data-k="all">All</button>
+          <button class="pill-btn" data-k="eat">🍽 Eat</button>
+          <button class="pill-btn" data-k="drink">🍸 Drink</button>
+        </span>
+      </div>
+
+      <div id="eat-list"></div>
     </div>
   </section>
 

@@ -456,6 +456,57 @@ function renderItinerary() {
   root.innerHTML = banner + legBlocks.join("");
 }
 
+// ── Render: Eat & drink ───────────────────────────────────────────────────
+let eatRegion = "all";
+let eatKind = "all";
+const REGION_ORDER = ["Istanbul", "Cappadocia", "Coast"];
+const mapsLink = (s) =>
+  "https://www.google.com/maps/search/?api=1&query=" +
+  encodeURIComponent(`${s.name} ${s.area} Turkey`);
+
+function renderFood() {
+  const root = $("#eat-list");
+  root.innerHTML = "";
+  const regions = eatRegion === "all" ? REGION_ORDER : [eatRegion];
+
+  regions.forEach((region) => {
+    const groups =
+      eatKind === "eat" ? ["eat"] : eatKind === "drink" ? ["drink"] : ["eat", "drink"];
+    const inRegion = FOODSPOTS.filter((s) => s.city === region);
+    if (!inRegion.length) return;
+
+    const block = el("div", "eat-region");
+    block.innerHTML = `<h3 class="eat-region-title">${region}</h3>`;
+
+    groups.forEach((kind) => {
+      const list = inRegion.filter((s) => s.kind === kind);
+      if (!list.length) return;
+      const head = kind === "eat" ? "🍽 Restaurants" : "🍸 Bars &amp; pubs";
+      const sub = el("div", "eat-sub");
+      sub.innerHTML = `<div class="eat-sub-title">${head}</div>`;
+      const grid = el("div", "eat-grid");
+      list.forEach((s) => {
+        const card = el("a", `food-card ${s.kind}`);
+        card.href = mapsLink(s);
+        card.target = "_blank";
+        card.rel = "noopener";
+        card.innerHTML = `
+          <div class="food-top">
+            <span class="food-name">${esc(s.name)}</span>
+            <span class="tag cost">${s.cost}</span>
+          </div>
+          <div class="food-meta">${esc(s.area)} · ${esc(s.cuisine)}</div>
+          <p class="food-blurb">${esc(s.blurb)}</p>
+          <span class="food-link">📍 Open in Maps ↗</span>`;
+        grid.appendChild(card);
+      });
+      sub.appendChild(grid);
+      block.appendChild(sub);
+    });
+    root.appendChild(block);
+  });
+}
+
 // ── Render: Hotels ────────────────────────────────────────────────────────
 function renderHotels() {
   const root = $("#hotels");
@@ -526,6 +577,7 @@ function init() {
   renderFlights();
   renderActivities();
   renderItinerary();
+  renderFood();
   renderHotels();
   renderBudget();
 
@@ -560,6 +612,22 @@ function init() {
     const btn = e.target.closest(".pick-btn");
     if (btn) togglePick(btn.dataset.id, btn.dataset.who);
   });
+
+  // eat & drink filters (region + kind)
+  document.querySelectorAll("#eat-filters > .pill-btn").forEach((b) =>
+    b.addEventListener("click", () => {
+      eatRegion = b.dataset.f;
+      document.querySelectorAll("#eat-filters > .pill-btn").forEach((x) => x.classList.toggle("active", x === b));
+      renderFood();
+    })
+  );
+  document.querySelectorAll("#eat-kind .pill-btn").forEach((b) =>
+    b.addEventListener("click", () => {
+      eatKind = b.dataset.k;
+      document.querySelectorAll("#eat-kind .pill-btn").forEach((x) => x.classList.toggle("active", x === b));
+      renderFood();
+    })
+  );
 
   // agent
   $("#agent-run").addEventListener("click", runAgent);

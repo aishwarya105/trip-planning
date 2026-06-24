@@ -265,6 +265,24 @@ img { max-width: 100%; }
 .overflow-list { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
 .tl-pick.over { background: #fff; border: 1px dashed var(--gold-deep); }
 
+/* ── Eat & drink ── */
+.kind-toggle { display: inline-flex; gap: 6px; }
+.eat-region { margin-bottom: 26px; }
+.eat-region-title { font-size: 1.35rem; margin: 6px 0 2px; color: var(--teal-deep); }
+.eat-sub { margin-top: 12px; }
+.eat-sub-title { font-size: .82rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-soft); margin-bottom: 10px; }
+.eat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.food-card { display: flex; flex-direction: column; gap: 6px; background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--teal); border-radius: 14px; padding: 15px 16px; box-shadow: var(--shadow); text-decoration: none; color: var(--ink); transition: transform .12s ease, box-shadow .12s ease; }
+.food-card.drink { border-left-color: var(--terra); }
+.food-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.food-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.food-name { font-weight: 800; font-size: 1.05rem; line-height: 1.25; }
+.food-top .tag.cost { flex: none; font-size: .7rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
+.food-meta { font-size: .82rem; color: var(--teal-deep); font-weight: 700; }
+.food-card.drink .food-meta { color: var(--terra-deep); }
+.food-blurb { font-size: .9rem; color: var(--ink-soft); margin: 2px 0 4px; line-height: 1.45; }
+.food-link { font-size: .82rem; font-weight: 700; color: var(--gold-deep); margin-top: auto; }
+
 /* ── Stay ── */
 .hotel .icon { font-size: 1.8rem; }
 .hotel h3 { margin: 6px 0 2px; }
