@@ -13,6 +13,7 @@ const defaultState = () => ({
   picks: { a: [], b: [] }, // arrays of activity ids
   votes: {}, // { [placeId]: { a: "up"|"down", b: "up"|"down" } }
   notes: {}, // { [placeId]: { a: "text", b: "text" } }
+  booked: {}, // { [itemId]: true } — shared "booked it" checklist
 });
 
 let state = load();
@@ -24,7 +25,7 @@ function load() {
     if (saved) return {
       ...defaultState(), ...saved,
       picks: { ...{ a: [], b: [] }, ...saved.picks },
-      votes: { ...saved.votes }, notes: { ...saved.notes },
+      votes: { ...saved.votes }, notes: { ...saved.notes }, booked: { ...saved.booked },
     };
   } catch (_) {}
   return defaultState();
@@ -50,6 +51,7 @@ function applyIncomingShare() {
       Object.entries(data.notes || {}).forEach(([id, text]) => {
         (state.notes[id] || (state.notes[id] = {}))[data.who] = text;
       });
+      Object.entries(data.booked || {}).forEach(([id, v]) => { if (v) state.booked[id] = true; });
       save();
       const other = data.who === "a" ? state.names.a : state.names.b;
       setTimeout(() => toast(`Merged ${other}'s picks, votes & notes ✨`), 600);
@@ -401,6 +403,8 @@ function setVote(id, who, vote) {
   renderActivities();
   renderFood();
   renderLoved();
+  renderBooking();
+  updateMapStyles();
   pushSync({ votes: { [id]: { [who]: (state.votes[id] && state.votes[id][who]) || null } } });
 }
 
@@ -436,6 +440,31 @@ const placeOrder = (id) => {
   const i = ACTIVITIES.findIndex((x) => x.id === id);
   return i >= 0 ? i : 1000 + FOODSPOTS.findIndex((x) => x.id === id);
 };
+
+// Is a place part of "our shortlist" — picked (activities) or upvoted (anything)?
+function inShortlist(id) {
+  const act = ACTIVITIES.find((a) => a.id === id);
+  const picked = act && (state.picks.a.includes(id) || state.picks.b.includes(id));
+  const v = state.votes[id] || {};
+  return !!(picked || v.a === "up" || v.b === "up");
+}
+
+// Great-circle distance (km) between two [lat,lng] points, + a friendly hint.
+function haversineKm(c1, c2) {
+  if (!c1 || !c2) return null;
+  const R = 6371, toR = Math.PI / 180;
+  const dLat = (c2[0] - c1[0]) * toR, dLng = (c2[1] - c1[1]) * toR;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(c1[0] * toR) * Math.cos(c2[0] * toR) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+function travelHint(c1, c2) {
+  const km = haversineKm(c1, c2);
+  if (km == null) return "";
+  if (km < 0.12) return "🚶 next door";
+  if (km <= 1.6) return `🚶 ~${Math.max(2, Math.round((km / 5) * 60))} min walk`;
+  if (km <= 12) return `🚕 ~${km < 10 ? km.toFixed(1) : Math.round(km)} km`;
+  return `🚗 ~${Math.round(km)} km`;
+}
 
 function lovedChip(id, subOverride) {
   const p = placeInfo(id);
@@ -476,6 +505,59 @@ function renderLoved() {
   }
   root.innerHTML = html;
 }
+
+// ── "Book these" checklist ────────────────────────────────────────────────
+// Pulls together what you've committed to — essentials, picked activities and
+// loved eateries — each with a booking link and a shared tickable checkbox.
+function renderBooking() {
+  const root = $("#booking-body");
+  if (!root) return;
+
+  const acts = ACTIVITIES.filter((a) => state.picks.a.includes(a.id) || state.picks.b.includes(a.id))
+    .sort((x, y) => (isMatched(y) - isMatched(x)) || (ACTIVITIES.indexOf(x) - ACTIVITIES.indexOf(y)));
+  const eats = FOODSPOTS.filter((f) => bothLove(f.id) || likedByOne(f.id))
+    .sort((x, y) => bothLove(y.id) - bothLove(x.id));
+
+  const essentials = [
+    { id: "book-flight-a", label: `✈️ Book ${esc(state.names.a)}'s flight · SFO → IST`, link: FLIGHTS.a.search },
+    { id: "book-flight-b", label: `✈️ Book ${esc(state.names.b)}'s flight · DEL → IST`, link: FLIGHTS.b.search },
+    { id: "book-visa-b", label: `🛂 ${esc(state.names.b)}'s Türkiye visa (start early!)`, link: VISA.b.links[0].url },
+    { id: "book-hotels", label: `🏨 Book hotels · Istanbul, Cappadocia & Coast`, link: HOTELS[0].url },
+    { id: "book-domestic", label: `🛫 Book 2 domestic hops between regions`, link: "https://www.google.com/travel/flights" },
+  ];
+  const actItems = acts.map((a) => ({ id: `book-${a.id}`, label: `${a.icon} ${esc(a.title)}${isMatched(a) ? " ✨" : ""}`, link: tourLink(a) }));
+  const eatItems = eats.map((f) => ({ id: `book-${f.id}`, label: `${f.kind === "drink" ? "🍸" : "🍽️"} ${esc(f.name)}${bothLove(f.id) ? " ✨" : ""} · ${esc(f.area)}`, link: mapsLink(f) }));
+
+  const rowsHtml = (items) => items.map((it) => {
+    const done = !!state.booked[it.id];
+    return `<label class="bk-item ${done ? "done" : ""}">
+        <input type="checkbox" class="bk-check" data-id="${it.id}" ${done ? "checked" : ""}>
+        <span class="bk-label">${it.label}</span>
+        ${it.link ? `<a class="bk-link" href="${it.link}" target="_blank" rel="noopener">Book ↗</a>` : ""}
+      </label>`;
+  }).join("");
+
+  const all = [...essentials, ...actItems, ...eatItems];
+  const done = all.filter((it) => state.booked[it.id]).length;
+  const pct = all.length ? Math.round((done / all.length) * 100) : 0;
+
+  root.innerHTML =
+    `<div class="bk-progress"><div class="bk-bar"><span style="width:${pct}%"></span></div><div class="bk-progress-txt"><b>${done}</b> of <b>${all.length}</b> booked</div></div>` +
+    `<h3 class="bk-h">✈️ Essentials</h3>${rowsHtml(essentials)}` +
+    `<h3 class="bk-h">🎟️ Activities to book ${actItems.length ? `<span class="bk-count">${actItems.length}</span>` : ""}</h3>` +
+    (actItems.length ? rowsHtml(actItems) : `<p class="bk-empty">Pick activities above and they'll line up here with booking links.</p>`) +
+    `<h3 class="bk-h">🍽️ Tables to reserve ${eatItems.length ? `<span class="bk-count">${eatItems.length}</span>` : ""}</h3>` +
+    (eatItems.length ? rowsHtml(eatItems) : `<p class="bk-empty">👍 an eatery (ideally both of you) and it'll show up here to reserve.</p>`);
+}
+
+function setBooked(id, on) {
+  if (on) state.booked[id] = true;
+  else delete state.booked[id];
+  save();
+  renderBooking();
+  pushSync({ booked: { [id]: on ? true : null } });
+}
+
 // Map our region buckets to a searchable place name for tour sites
 function searchPlace(city) {
   return { Istanbul: "Istanbul", Cappadocia: "Cappadocia", Coast: "Antalya", Anywhere: "Turkey", Detour: "Pamukkale" }[city] || "Turkey";
@@ -499,6 +581,8 @@ function togglePick(id, who) {
   save();
   renderActivities();
   renderItinerary();
+  renderBooking();
+  updateMapStyles();
   pushSync({ picks: { [who]: state.picks[who] } });
 }
 
@@ -605,6 +689,7 @@ function renderItinerary() {
     totalOverflow += overflow.length;
 
     const dayCards = days.map((d, i) => {
+      let prev = null; // last filled activity, to hint travel between stops
       const rows = SLOTS.map((s) => {
         const a = d[s.key];
         if (!a) return `
@@ -619,7 +704,14 @@ function renderItinerary() {
         const tag = who === "both"
           ? `<span class="slot-who both">✨ both</span>`
           : `<span class="slot-who ${who}">${esc(state.names[who])}</span>`;
-        return `
+        // travel hint from the previous stop of the day
+        let link = "";
+        if (prev && prev.id !== a.id) {
+          const h = travelHint(prev.coords, a.coords);
+          if (h) link = `<div class="slot-link">${h}</div>`;
+        }
+        prev = a;
+        return `${link}
           <div class="slot filled ${isMatched(a) ? "match" : ""}">
             <span class="slot-when">${s.icon} ${span ? "All day" : s.label}<small>${a.timeHint || s.time}</small></span>
             <span class="slot-act">${a.icon} ${a.title} ${tag}</span>
@@ -730,6 +822,8 @@ function renderFood() {
 // ── Render: Map (Leaflet + OpenStreetMap, free, no key) ───────────────────
 let tripMap = null;
 let tripMarkers = [];
+let mapMode = "all"; // "all" | "shortlist"
+const MAP_COLORS = { act: "#0e8f9e", eat: "#d1495b", drink: "#cf9836" };
 const regionOf = (city) => (city === "Cappadocia" ? "Cappadocia" : city === "Coast" || city === "Detour" ? "Coast" : "Istanbul");
 const gmapsQuery = (q) => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q);
 
@@ -740,16 +834,16 @@ function renderMap() {
     host.innerHTML = `<div class="map-fallback">The interactive map couldn't load here — you can still open any place from its card's “Open in Maps” link.</div>`;
     return;
   }
-  if (tripMap) return; // initialise once
+  if (tripMap) { updateMapStyles(); return; }
 
   const pins = [];
   ACTIVITIES.forEach((a) => {
-    if (a.coords) pins.push({ coords: a.coords, region: regionOf(a.city), kind: "act",
+    if (a.coords) pins.push({ id: a.id, coords: a.coords, region: regionOf(a.city), kind: "act",
       label: `${a.icon} ${a.title}`, sub: `${a.area} · ${a.city}`, link: gmapsQuery(`${a.title} ${searchPlace(a.city)} Turkey`) });
   });
   FOODSPOTS.forEach((f) => {
     const c = typeof FOOD_COORDS !== "undefined" && FOOD_COORDS[f.id];
-    if (c) pins.push({ coords: c, region: regionOf(f.city), kind: f.kind === "drink" ? "drink" : "eat",
+    if (c) pins.push({ id: f.id, coords: c, region: regionOf(f.city), kind: f.kind === "drink" ? "drink" : "eat",
       label: `${f.kind === "drink" ? "🍸" : "🍽️"} ${f.name}`, sub: f.area, link: mapsLink(f) });
   });
 
@@ -758,15 +852,40 @@ function renderMap() {
     maxZoom: 18, attribution: "© OpenStreetMap contributors",
   }).addTo(tripMap);
 
-  const colors = { act: "#0e8f9e", eat: "#d1495b", drink: "#cf9836" };
   tripMarkers = pins.map((p) => {
-    const m = L.circleMarker(p.coords, { radius: 7, color: "#fff", weight: 2, fillColor: colors[p.kind], fillOpacity: 0.95 })
-      .bindPopup(`<b>${esc(p.label)}</b><br><span style="color:#4a5a64">${esc(p.sub)}</span><br><a href="${p.link}" target="_blank" rel="noopener">Open in Google Maps ↗</a>`);
-    m.tripRegion = p.region;
-    m.tripCoords = p.coords;
+    const m = L.circleMarker(p.coords, { radius: 7, color: "#fff", weight: 2, fillColor: MAP_COLORS[p.kind], fillOpacity: 0.95 }).bindPopup("");
+    Object.assign(m, { placeId: p.id, tripKind: p.kind, tripRegion: p.region, tripCoords: p.coords, baseLabel: p.label, sub: p.sub, link: p.link });
     return m.addTo(tripMap);
   });
+  updateMapStyles();
   focusMap("all");
+}
+
+// Recolour / filter pins to reflect picks & votes (gold = you both love/picked).
+function updateMapStyles() {
+  if (!tripMap || !tripMarkers.length) return;
+  tripMarkers.forEach((m) => {
+    const id = m.placeId;
+    const act = ACTIVITIES.find((a) => a.id === id);
+    const pickedBoth = act && state.picks.a.includes(id) && state.picks.b.includes(id);
+    const pickedAny = act && (state.picks.a.includes(id) || state.picks.b.includes(id));
+    const love = bothLove(id), oneUp = likedByOne(id);
+    const star = love || pickedBoth;
+
+    if (mapMode === "shortlist" && !inShortlist(id)) {
+      if (tripMap.hasLayer(m)) tripMap.removeLayer(m);
+      return;
+    }
+    if (!tripMap.hasLayer(m)) m.addTo(tripMap);
+
+    m.setStyle(star
+      ? { radius: 10, color: "#b8860b", weight: 3, fillColor: "#e9b44c", fillOpacity: 1 }
+      : { radius: oneUp || pickedAny ? 8 : 7, color: "#fff", weight: 2, fillColor: MAP_COLORS[m.tripKind], fillOpacity: 0.95 });
+    if (star && m.bringToFront) m.bringToFront();
+
+    const status = love ? "✨ You both love this" : pickedBoth ? "✨ You both picked this" : oneUp ? "👍 Liked by one of you" : pickedAny ? "👍 On the shortlist" : "";
+    m.setPopupContent(`<b>${esc(m.baseLabel)}</b><br><span style="color:#4a5a64">${esc(m.sub)}</span>${status ? `<br><b style="color:#cf9836">${status}</b>` : ""}<br><a href="${m.link}" target="_blank" rel="noopener">Open in Google Maps ↗</a>`);
+  });
 }
 
 function focusMap(region) {
@@ -816,7 +935,7 @@ function makeShareLink() {
   const myVotes = {}, myNotes = {};
   Object.keys(state.votes).forEach((id) => { if (state.votes[id][who]) myVotes[id] = state.votes[id][who]; });
   Object.keys(state.notes).forEach((id) => { if (state.notes[id][who]) myNotes[id] = state.notes[id][who]; });
-  const payload = { who, name: state.names[who], picks: state.picks[who], votes: myVotes, notes: myNotes };
+  const payload = { who, name: state.names[who], picks: state.picks[who], votes: myVotes, notes: myNotes, booked: state.booked };
   const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
   const url = `${location.origin}${location.pathname}?s=${encoded}`;
   const friend = who === "a" ? state.names.b : state.names.a;
@@ -853,6 +972,7 @@ function init() {
   renderLoved();
   renderFood();
   renderMap();
+  renderBooking();
   renderHotels();
   renderBudget();
 
@@ -924,6 +1044,18 @@ function init() {
       focusMap(b.dataset.focus);
     })
   );
+  // map shortlist filter
+  $("#map-shortlist").addEventListener("click", () => {
+    mapMode = mapMode === "shortlist" ? "all" : "shortlist";
+    $("#map-shortlist").classList.toggle("active", mapMode === "shortlist");
+    updateMapStyles();
+  });
+
+  // booking checklist
+  $("#booking-body").addEventListener("change", (e) => {
+    const cb = e.target.closest(".bk-check");
+    if (cb) setBooked(cb.dataset.id, cb.checked);
+  });
 
   // sort the eatery list by your combined votes
   $("#eat-sort").addEventListener("click", () => {
@@ -939,17 +1071,20 @@ function init() {
   // share + reset
   $("#share-btn").addEventListener("click", makeShareLink);
   $("#reset-btn").addEventListener("click", () => {
-    if (confirm("Clear all picks, votes and notes for both travelers?")) {
+    if (confirm("Clear all picks, votes, notes and booking ticks for both travelers?")) {
       state.picks = { a: [], b: [] };
       state.votes = {};
       state.notes = {};
+      state.booked = {};
       save();
       renderActivities();
       renderFood();
       renderLoved();
       renderItinerary();
-      toast("All picks, votes & notes cleared");
-      pushSync({ picks: { a: [], b: [] }, votes: {}, notes: {} });
+      renderBooking();
+      updateMapStyles();
+      toast("All picks, votes, notes & bookings cleared");
+      pushSync({ picks: { a: [], b: [] }, votes: {}, notes: {}, booked: {} });
     }
   });
 
@@ -1018,7 +1153,7 @@ function setupSync() {
     if (!code) { toast("Type a trip code first"); return; }
     await window.TripSync.join(code);
     // seed the room with whatever we have locally
-    pushSync({ names: state.names, picks: state.picks, votes: state.votes, notes: state.notes });
+    pushSync({ names: state.names, picks: state.picks, votes: state.votes, notes: state.notes, booked: state.booked });
     const link = `${location.origin}${location.pathname}?room=${encodeURIComponent(code.toLowerCase())}`;
     history.replaceState({}, "", link + location.hash);
     toast(`Live trip “${code}” started 🔄`);
@@ -1048,10 +1183,12 @@ function applyRemoteState(data) {
   // deep-merge per place so neither traveler's vote/note is lost
   if (data.votes) Object.entries(data.votes).forEach(([id, v]) => { state.votes[id] = { ...(state.votes[id] || {}), ...v }; });
   if (data.notes) Object.entries(data.notes).forEach(([id, n]) => { state.notes[id] = { ...(state.notes[id] || {}), ...n }; });
+  if (data.booked) Object.entries(data.booked).forEach(([id, v]) => { if (v) state.booked[id] = true; else delete state.booked[id]; });
   save();
   syncSetupInputs();
   refreshNames();
   renderItinerary();
+  updateMapStyles();
 }
 
 // re-render the spots where traveler names / votes / notes appear
@@ -1061,6 +1198,7 @@ function refreshNames() {
   renderFood();
   renderLoved();
   renderItinerary();
+  renderBooking();
   renderBudget();
 }
 
