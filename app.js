@@ -821,6 +821,7 @@ function renderFood() {
 
 // ── Render: Map (Leaflet + OpenStreetMap, free, no key) ───────────────────
 let tripMap = null;
+let tripLayer = null; // cluster group if available, else the map itself
 let tripMarkers = [];
 let mapMode = "all"; // "all" | "shortlist"
 const MAP_COLORS = { act: "#0e8f9e", eat: "#d1495b", drink: "#cf9836" };
@@ -852,10 +853,17 @@ function renderMap() {
     maxZoom: 18, attribution: "© OpenStreetMap contributors",
   }).addTo(tripMap);
 
+  // Cluster overlapping pins (so far-apart regions and tight neighbourhoods both
+  // read clearly). Falls back to plain markers if the plugin didn't load.
+  tripLayer = typeof L.markerClusterGroup === "function"
+    ? L.markerClusterGroup({ maxClusterRadius: 44, showCoverageOnHover: false, spiderfyOnMaxZoom: true }).addTo(tripMap)
+    : tripMap;
+
   tripMarkers = pins.map((p) => {
     const m = L.circleMarker(p.coords, { radius: 7, color: "#fff", weight: 2, fillColor: MAP_COLORS[p.kind], fillOpacity: 0.95 }).bindPopup("");
     Object.assign(m, { placeId: p.id, tripKind: p.kind, tripRegion: p.region, tripCoords: p.coords, baseLabel: p.label, sub: p.sub, link: p.link });
-    return m.addTo(tripMap);
+    tripLayer.addLayer(m);
+    return m;
   });
   updateMapStyles();
   focusMap("all");
@@ -873,10 +881,10 @@ function updateMapStyles() {
     const star = love || pickedBoth;
 
     if (mapMode === "shortlist" && !inShortlist(id)) {
-      if (tripMap.hasLayer(m)) tripMap.removeLayer(m);
+      if (tripLayer.hasLayer(m)) tripLayer.removeLayer(m);
       return;
     }
-    if (!tripMap.hasLayer(m)) m.addTo(tripMap);
+    if (!tripLayer.hasLayer(m)) tripLayer.addLayer(m);
 
     m.setStyle(star
       ? { radius: 10, color: "#b8860b", weight: 3, fillColor: "#e9b44c", fillOpacity: 1 }
