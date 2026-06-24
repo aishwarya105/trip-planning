@@ -22,6 +22,7 @@
         <a href="#flights">Flights</a>
         <a href="#activities">Activities</a>
         <a href="#itinerary">Itinerary</a>
+        <a href="#loved">Loved</a>
         <a href="#eat">Eat &amp; drink</a>
         <a href="#stay">Stay</a>
         <a href="#budget">Budget</a>
@@ -185,6 +186,16 @@
     </div>
   </section>
 
+  <!-- ── Loved (vote consensus) ── -->
+  <section class="section" id="loved">
+    <div class="wrap">
+      <span class="kicker">Where you agree</span>
+      <h2>What you both love ❤️</h2>
+      <p class="lead">As you both vote 👍 across activities and places to eat &amp; drink, the ones you agree on rise to the top here — your shared shortlist at a glance.</p>
+      <div id="loved-body"></div>
+    </div>
+  </section>
+
   <!-- ── Eat & drink ── -->
   <section class="section" id="eat">
     <div class="wrap">
@@ -203,6 +214,7 @@
           <button class="pill-btn" data-k="eat">🍽 Eat</button>
           <button class="pill-btn" data-k="drink">🍸 Drink</button>
         </span>
+        <button class="pill-btn" id="eat-sort" title="Sort by your votes">⭐ Top-rated first</button>
       </div>
 
       <div id="eat-list"></div>
