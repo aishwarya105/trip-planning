@@ -540,37 +540,46 @@ const whoWants = (a) => {
 // Returns { days:[{morning,afternoon,evening}], overflow:[acts] }.
 function scheduleLeg(leg) {
   const acts = ACTIVITIES.filter((a) => isPicked(a) && leg.activityCities.includes(a.city));
-  // Mutual picks first (they get the scarce slots), then keep authoring order.
-  acts.sort((x, y) => (isMatched(y) - isMatched(x)) || (ACTIVITIES.indexOf(x) - ACTIVITIES.indexOf(y)));
+  // Process neighbourhood by neighbourhood so each day stays local. Areas with a
+  // mutual pick come first; within an area, mutual picks first.
+  const areas = [...new Set(acts.map((a) => a.area))];
+  const areaHasMutual = (ar) => acts.some((a) => a.area === ar && isMatched(a));
+  const firstIdx = (ar) => Math.min(...acts.filter((a) => a.area === ar).map((a) => ACTIVITIES.indexOf(a)));
+  areas.sort((x, y) => (areaHasMutual(y) - areaHasMutual(x)) || (firstIdx(x) - firstIdx(y)));
+  const ordered = [];
+  areas.forEach((ar) =>
+    ordered.push(
+      ...acts.filter((a) => a.area === ar).sort((x, y) => (isMatched(y) - isMatched(x)) || (ACTIVITIES.indexOf(x) - ACTIVITIES.indexOf(y)))
+    )
+  );
 
-  const days = Array.from({ length: leg.dayCount }, () => ({ morning: null, afternoon: null, evening: null }));
+  const days = Array.from({ length: leg.dayCount }, () => ({ morning: null, afternoon: null, evening: null, area: null }));
   const overflow = [];
   const free = (d, k) => d[k] === null;
 
-  for (const a of acts) {
+  for (const a of ordered) {
     if (!place(days, a, free)) overflow.push(a);
   }
   return { days, overflow };
 }
 
-// Try to seat an activity in the earliest day that has room for its slot.
+// Seat an activity, preferring a day already in its neighbourhood, then a fresh
+// day, then any day with a free slot (so we cluster but never falsely overflow).
 function place(days, a, free) {
-  const order =
-    a.slot === "fullday" ? null :
-    a.slot === "any" ? ["afternoon", "morning", "evening"] :
-    [a.slot];
-
+  const order = a.slot === "any" ? ["afternoon", "morning", "evening"] : [a.slot];
+  const fits = (d) => (a.slot === "fullday" ? free(d, "morning") && free(d, "afternoon") : order.some((k) => free(d, k)));
+  const d =
+    days.find((x) => fits(x) && x.area === a.area) ||
+    days.find((x) => fits(x) && !x.area) ||
+    days.find((x) => fits(x));
+  if (!d) return false;
+  if (!d.area) d.area = a.area;
   if (a.slot === "fullday") {
-    const d = days.find((d) => free(d, "morning") && free(d, "afternoon"));
-    if (!d) return false;
     d.morning = a; d.afternoon = a; d.fullday = a.id; // same ref in both → rendered once
-    return true;
+  } else {
+    d[order.find((k) => free(d, k))] = a;
   }
-  for (const k of order) {
-    const d = days.find((d) => free(d, k));
-    if (d) { d[k] = a; return true; }
-  }
-  return false;
+  return true;
 }
 
 function renderItinerary() {
@@ -618,7 +627,7 @@ function renderItinerary() {
       }).join("");
       return `
         <div class="day-card">
-          <div class="day-card-head">Day ${i + 1}</div>
+          <div class="day-card-head">Day ${i + 1}${d.area ? ` <span class="day-area">· ${esc(d.area)}</span>` : ""}</div>
           <div class="slots">${rows}</div>
         </div>`;
     }).join("");
@@ -718,6 +727,55 @@ function renderFood() {
   enhanceImages(root);
 }
 
+// ── Render: Map (Leaflet + OpenStreetMap, free, no key) ───────────────────
+let tripMap = null;
+let tripMarkers = [];
+const regionOf = (city) => (city === "Cappadocia" ? "Cappadocia" : city === "Coast" || city === "Detour" ? "Coast" : "Istanbul");
+const gmapsQuery = (q) => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q);
+
+function renderMap() {
+  const host = $("#trip-map");
+  if (!host) return;
+  if (typeof L === "undefined") {
+    host.innerHTML = `<div class="map-fallback">The interactive map couldn't load here — you can still open any place from its card's “Open in Maps” link.</div>`;
+    return;
+  }
+  if (tripMap) return; // initialise once
+
+  const pins = [];
+  ACTIVITIES.forEach((a) => {
+    if (a.coords) pins.push({ coords: a.coords, region: regionOf(a.city), kind: "act",
+      label: `${a.icon} ${a.title}`, sub: `${a.area} · ${a.city}`, link: gmapsQuery(`${a.title} ${searchPlace(a.city)} Turkey`) });
+  });
+  FOODSPOTS.forEach((f) => {
+    const c = typeof FOOD_COORDS !== "undefined" && FOOD_COORDS[f.id];
+    if (c) pins.push({ coords: c, region: regionOf(f.city), kind: f.kind === "drink" ? "drink" : "eat",
+      label: `${f.kind === "drink" ? "🍸" : "🍽️"} ${f.name}`, sub: f.area, link: mapsLink(f) });
+  });
+
+  tripMap = L.map("trip-map", { scrollWheelZoom: false });
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 18, attribution: "© OpenStreetMap contributors",
+  }).addTo(tripMap);
+
+  const colors = { act: "#0e8f9e", eat: "#d1495b", drink: "#cf9836" };
+  tripMarkers = pins.map((p) => {
+    const m = L.circleMarker(p.coords, { radius: 7, color: "#fff", weight: 2, fillColor: colors[p.kind], fillOpacity: 0.95 })
+      .bindPopup(`<b>${esc(p.label)}</b><br><span style="color:#4a5a64">${esc(p.sub)}</span><br><a href="${p.link}" target="_blank" rel="noopener">Open in Google Maps ↗</a>`);
+    m.tripRegion = p.region;
+    m.tripCoords = p.coords;
+    return m.addTo(tripMap);
+  });
+  focusMap("all");
+}
+
+function focusMap(region) {
+  if (!tripMap || !tripMarkers.length) return;
+  const ms = region === "all" ? tripMarkers : tripMarkers.filter((m) => m.tripRegion === region);
+  if (!ms.length) return;
+  tripMap.fitBounds(L.latLngBounds(ms.map((m) => m.tripCoords)), { padding: [40, 40], maxZoom: region === "all" ? 7 : 13 });
+}
+
 // ── Render: Hotels ────────────────────────────────────────────────────────
 function renderHotels() {
   const root = $("#hotels");
@@ -794,6 +852,7 @@ function init() {
   renderItinerary();
   renderLoved();
   renderFood();
+  renderMap();
   renderHotels();
   renderBudget();
 
@@ -858,6 +917,14 @@ function init() {
       renderFood();
     })
   );
+  // map region focus
+  document.querySelectorAll("#map-focus .pill-btn[data-focus]").forEach((b) =>
+    b.addEventListener("click", () => {
+      document.querySelectorAll("#map-focus .pill-btn[data-focus]").forEach((x) => x.classList.toggle("active", x === b));
+      focusMap(b.dataset.focus);
+    })
+  );
+
   // sort the eatery list by your combined votes
   $("#eat-sort").addEventListener("click", () => {
     eatSort = eatSort === "top" ? "default" : "top";
