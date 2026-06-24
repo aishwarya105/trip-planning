@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Türkiye Together · Plan our Türkiye trip</title>
+  <meta name="description" content="A collaborative planner for our September trip to Türkiye — flights, visas, activities and itinerary, picked together." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Playfair+Display:ital,wght@0,700;0,800;1,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🇹🇷</text></svg>" />
+</head>
+<body>
+
+  <!-- ── Nav ── -->
+  <nav class="nav">
+    <div class="wrap">
+      <span class="brand">Türkiye <span class="dot">●</span> Together</span>
+      <div class="links">
+        <a href="#visa">Visas</a>
+        <a href="#flights">Flights</a>
+        <a href="#activities">Activities</a>
+        <a href="#itinerary">Itinerary</a>
+        <a href="#stay">Stay</a>
+        <a href="#budget">Budget</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── Hero ── -->
+  <header class="hero">
+    <div class="wrap">
+      <span class="kicker">September 2026 · ~9 nights · medium budget</span>
+      <h1>Two cities, one <span class="accent">Türkiye</span> adventure</h1>
+      <p>A planner for our trip — a balanced mix of buzzy fun and proper relaxation, picked together so the final itinerary is one we both love.</p>
+      <div class="route-chips">
+        <span class="chip">✈️ <b>Aishwarya</b> · San Francisco → Istanbul</span>
+        <span class="chip">✈️ <b>Friend</b> · New Delhi → Istanbul</span>
+        <span class="chip">🤝 Meet in <b>Istanbul</b></span>
+      </div>
+      <div class="cta">
+        <a href="#visa" class="btn btn-gold">⚠️ Check visas first</a>
+        <a href="#activities" class="btn btn-ghost">Start picking activities</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Setup bar ── -->
+  <div class="wrap">
+    <div class="setup">
+      <div class="setup-grid">
+        <div class="field">
+          <label>Traveler A (from SFO)</label>
+          <input id="name-a" type="text" value="Aishwarya" />
+        </div>
+        <div class="field">
+          <label>Traveler B (from DEL)</label>
+          <input id="name-b" type="text" value="Friend" />
+        </div>
+        <div class="field">
+          <label>Trip dates</label>
+          <div style="display:flex; gap:8px;">
+            <input id="date-start" type="date" />
+            <input id="date-end" type="date" />
+          </div>
+        </div>
+        <div class="field">
+          <label>I am planning as…</label>
+          <div class="whoami" id="whoami">
+            <button data-who="a" class="active">A</button>
+            <button data-who="b">B</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Visa ── -->
+  <section class="section" id="visa">
+    <div class="wrap">
+      <span class="kicker">Do this first</span>
+      <h2>Visas — and why we book soon</h2>
+      <p class="lead">Aishwarya is visa-free; her friend in Delhi is the one on the clock. The visa you can get depends on documents you may need flights & hotels to obtain — so locking travel early matters.</p>
+      <div class="grid grid-2" id="visa-cards"></div>
+    </div>
+  </section>
+
+  <!-- ── Flights / Agent ── -->
+  <section class="section" id="flights">
+    <div class="wrap">
+      <span class="kicker">Book these soon</span>
+      <h2>Flights &amp; the travel agent</h2>
+      <p class="lead">Tell the agent your dates and budget vibe, and it’ll recommend a pairing that lands you both in Istanbul around the same time — then jump to live prices.</p>
+
+      <div class="agent">
+        <h3>🤖 Travel-planning agent</h3>
+        <p class="sub">A quick assistant that reasons over both routes and suggests how to book.</p>
+        <div class="agent-controls">
+          <div class="field">
+            <label>Outbound date</label>
+            <input id="agent-date" type="date" />
+          </div>
+          <div class="field">
+            <label>Budget vibe</label>
+            <select id="agent-budget">
+              <option value="value">Cheapest sensible</option>
+              <option value="balanced" selected>Balanced (nonstop if close)</option>
+              <option value="comfort">Comfort — nonstop only</option>
+            </select>
+          </div>
+          <button class="btn btn-gold" id="agent-run">Plan our flights ✦</button>
+        </div>
+        <div class="agent-out" id="agent-out">
+          <p class="line typing">Press “Plan our flights” and I’ll work out the best pairing…</p>
+        </div>
+      </div>
+
+      <div class="grid grid-2" id="flight-cols"></div>
+
+      <div class="card" id="domestic" style="margin-top:22px;"></div>
+    </div>
+  </section>
+
+  <!-- ── Activities ── -->
+  <section class="section" id="activities">
+    <div class="wrap">
+      <span class="kicker">Pick together</span>
+      <h2>What do we want to do?</h2>
+      <p class="lead">Tap the buttons to mark what <em>you’d</em> like. Switch “I am planning as…” up top to record both of us. Anything we both pick lights up gold ✨ and flows into the itinerary.</p>
+
+      <div class="filters" id="filters">
+        <button class="pill-btn active" data-f="all">All</button>
+        <button class="pill-btn" data-f="Istanbul">Istanbul</button>
+        <button class="pill-btn" data-f="Cappadocia">Cappadocia</button>
+        <button class="pill-btn" data-f="Coast">Coast</button>
+        <button class="pill-btn" data-f="fun">🎉 Fun</button>
+        <button class="pill-btn" data-f="relax">🌿 Relax</button>
+        <span class="spacer"></span>
+        <span class="match-counter" id="match-counter">0 mutual picks</span>
+      </div>
+
+      <div class="act-grid" id="act-grid"></div>
+    </div>
+  </section>
+
+  <!-- ── Share ── -->
+  <section class="section" id="share">
+    <div class="wrap">
+      <div class="share-bar">
+        <div class="txt">
+          <h3>📤 Share your picks with each other</h3>
+          <p>No accounts needed. Generate a link with your selections baked in, send it over, and your friend’s page will merge them — instantly showing what you both want.</p>
+        </div>
+        <button class="btn btn-gold" id="share-btn">Copy my share link</button>
+        <button class="btn btn-outline" id="reset-btn" style="background:#fff;">Reset all picks</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Itinerary ── -->
+  <section class="section" id="itinerary">
+    <div class="wrap">
+      <span class="kicker">The plan, taking shape</span>
+      <h2>Our itinerary</h2>
+      <p class="lead">A relaxed 9-night loop — Istanbul → Cappadocia → the coast. Your picks drop into the right leg below; gold chips are the things you <em>both</em> chose.</p>
+      <div class="timeline" id="timeline"></div>
+    </div>
+  </section>
+
+  <!-- ── Stay ── -->
+  <section class="section" id="stay">
+    <div class="wrap">
+      <span class="kicker">Nice-ish, not splurgy</span>
+      <h2>Where we’ll stay</h2>
+      <p class="lead">Boutique 4★ comfort in the $110–200/night range — character and a good location without the luxury price tag.</p>
+      <div class="grid grid-3" id="hotels"></div>
+    </div>
+  </section>
+
+  <!-- ── Budget ── -->
+  <section class="section" id="budget">
+    <div class="wrap">
+      <span class="kicker">Roughly speaking</span>
+      <h2>Per-person budget</h2>
+      <p class="lead">Medium tier for ~9 nights. The only big difference between us is the international flight — everything on the ground is shared down the middle.</p>
+      <div class="toggle-budget" id="budget-toggle">
+        <button class="btn btn-outline btn-sm active" data-b="a">Aishwarya (SFO)</button>
+        <button class="btn btn-outline btn-sm" data-b="b">Friend (DEL)</button>
+      </div>
+      <div class="card" style="max-width:560px;">
+        <table class="budget-table" id="budget-table"></table>
+        <p class="budget-note">Estimates in USD, per person, excluding shopping & souvenirs. Hotels assume a shared twin/double room.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="wrap">
+      <span class="brand">Türkiye ● Together</span>
+      Built to plan one very good trip. Visa &amp; flight figures are 2026 estimates — always confirm on the official sites linked above.
+      <div style="margin-top:10px;">İyi yolculuklar — happy travels! 🇹🇷</div>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
