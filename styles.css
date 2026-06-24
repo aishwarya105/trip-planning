@@ -257,6 +257,24 @@ img { max-width: 100%; }
 .share-bar h3 { margin: 0 0 4px; color: #fff; }
 .share-bar p { margin: 0; color: #d8f0f2; font-size: .92rem; }
 
+/* ── Live sync panel ── */
+.sync-panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 22px; margin-top: 16px; box-shadow: var(--shadow); }
+.sync-head { display: flex; align-items: center; gap: 10px; }
+.sync-head h3 { margin: 0; font-size: 1.15rem; }
+.sync-state { margin-left: auto; font-size: .8rem; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .06em; }
+.sync-dot { width: 11px; height: 11px; border-radius: 50%; background: #c9c0ad; flex: 0 0 auto; }
+.sync-dot.ready { background: var(--gold); }
+.sync-dot.on { background: var(--good); box-shadow: 0 0 0 4px rgba(47,158,111,.18); }
+.sync-dot.off { background: #c9c0ad; }
+.sync-msg { color: var(--ink-soft); font-size: .92rem; margin: 10px 0 14px; }
+.sync-msg code { background: var(--cream-2); padding: 1px 6px; border-radius: 5px; font-size: .85em; }
+.sync-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.sync-controls input { padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; font: inherit; background: var(--cream); min-width: 180px; }
+.sync-controls input:focus { outline: 2px solid var(--teal); border-color: var(--teal); }
+
+/* live fares block inside the agent */
+.live-box { border-top: 1px solid rgba(255,255,255,.14); margin-top: 12px; padding-top: 10px; }
+
 /* ── Footer ── */
 .footer { background: var(--night); color: #aebfce; text-align: center; padding: 40px 0; font-size: .9rem; }
 .footer .brand { color: #fff; display: block; margin-bottom: 8px; }

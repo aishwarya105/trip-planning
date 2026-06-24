@@ -155,6 +155,22 @@
         <button class="btn btn-gold" id="share-btn">Copy my share link</button>
         <button class="btn btn-outline" id="reset-btn" style="background:#fff;">Reset all picks</button>
       </div>
+
+      <!-- Live sync (lights up once Firebase is configured in config.js) -->
+      <div class="sync-panel" id="sync-panel">
+        <div class="sync-head">
+          <span class="sync-dot" id="sync-dot"></span>
+          <h3>🔄 Live sync</h3>
+          <span class="sync-state" id="sync-state">checking…</span>
+        </div>
+        <p class="sync-msg" id="sync-msg"></p>
+        <div class="sync-controls" id="sync-controls" hidden>
+          <input id="room-input" type="text" placeholder="trip code e.g. turkey26" />
+          <button class="btn btn-gold btn-sm" id="room-join">Start / join live trip</button>
+          <button class="btn btn-outline btn-sm" id="room-copy" hidden>Copy invite link</button>
+          <button class="btn btn-outline btn-sm" id="room-leave" hidden>Leave</button>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -205,7 +221,9 @@
 
   <div class="toast" id="toast"></div>
 
+  <script src="config.js"></script>
   <script src="data.js"></script>
   <script src="app.js"></script>
+  <script type="module" src="sync.js"></script>
 </body>
 </html>

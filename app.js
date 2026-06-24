@@ -171,15 +171,56 @@ function runAgent() {
     `<p class="line"><a class="btn btn-gold btn-sm" href="${FLIGHTS.a.search}" target="_blank" rel="noopener">Open ${state.names.a}'s flights ↗</a> <a class="btn btn-gold btn-sm" href="${FLIGHTS.b.search}" target="_blank" rel="noopener">Open ${state.names.b}'s flights ↗</a></p>`,
   ];
 
-  // typewriter-ish reveal
+  // typewriter-ish reveal, then live fares if the proxy is configured
   let i = 0;
   out.innerHTML = "";
   (function step() {
-    if (i >= lines.length) return;
+    if (i >= lines.length) {
+      if (window.CONFIG && CONFIG.flightsApi) appendLivePrices(date, budget);
+      return;
+    }
     out.insertAdjacentHTML("beforeend", lines[i]);
     i++;
     setTimeout(step, 380);
   })();
+}
+
+// Fetch real fares from the Cloudflare/Amadeus proxy and append them.
+async function appendLivePrices(date, budget) {
+  const out = $("#agent-out");
+  const nonStop = budget === "comfort" ? "true" : "false";
+  const box = el("div", "live-box", '<p class="line typing">📡 Fetching live fares from Amadeus…</p>');
+  out.appendChild(box);
+  const routes = [
+    { flag: "🇺🇸", origin: "SFO", dest: "IST", name: state.names.a },
+    { flag: "🇮🇳", origin: "DEL", dest: "IST", name: state.names.b },
+  ];
+  try {
+    const results = await Promise.all(
+      routes.map((r) =>
+        fetch(`${CONFIG.flightsApi}?origin=${r.origin}&dest=${r.dest}&date=${encodeURIComponent(date)}&nonStop=${nonStop}`)
+          .then((res) => res.json())
+          .then((d) => ({ r, d }))
+          .catch(() => ({ r, d: { error: "unreachable" } }))
+      )
+    );
+    let html = '<p class="line"><b>📡 Live fares</b> (one-way, cheapest found):</p>';
+    let total = 0, haveBoth = true;
+    results.forEach(({ r, d }) => {
+      const top = d.offers && d.offers[0];
+      if (top) {
+        total += top.price;
+        html += `<p class="line">${r.flag} <b>${esc(r.name)}</b> ${r.origin}→${r.dest} — <span class="pill">$${Math.round(top.price)}</span> ${top.airline} · ${top.stops === 0 ? "nonstop" : top.stops + " stop"} · ${top.duration}</p>`;
+      } else {
+        haveBoth = false;
+        html += `<p class="line">${r.flag} <b>${esc(r.name)}</b> ${r.origin}→${r.dest} — <span class="typing">no live data for this date (free Amadeus test tier is limited — see SETUP.md to switch to production).</span></p>`;
+      }
+    });
+    if (haveBoth) html += `<p class="line">💳 Live combined ≈ <b>$${Math.round(total).toLocaleString()}</b> one-way for both of you.</p>`;
+    box.innerHTML = html;
+  } catch (e) {
+    box.innerHTML = `<p class="line typing">Couldn't reach the live price service — check CONFIG.flightsApi in config.js. (${e})</p>`;
+  }
 }
 const firstNum = (s) => parseInt(s.replace(/[^0-9–-]/g, "").split(/[–-]/)[0], 10) || 0;
 const lastNum = (s) => {
@@ -259,6 +300,12 @@ function togglePick(id, who) {
   save();
   renderActivities();
   renderItinerary();
+  pushSync({ picks: { [who]: state.picks[who] } });
+}
+
+// Send a partial state change to Firebase, if live sync is active.
+function pushSync(partial) {
+  if (window.TripSync && window.TripSync.enabled()) window.TripSync.push(partial);
 }
 
 function updateMatchCounter() {
@@ -375,8 +422,8 @@ function init() {
   renderBudget();
 
   // names
-  $("#name-a").addEventListener("input", (e) => { state.names.a = e.target.value || "Traveler A"; save(); refreshNames(); });
-  $("#name-b").addEventListener("input", (e) => { state.names.b = e.target.value || "Traveler B"; save(); refreshNames(); });
+  $("#name-a").addEventListener("input", (e) => { state.names.a = e.target.value || "Traveler A"; save(); refreshNames(); pushSync({ names: { a: state.names.a } }); });
+  $("#name-b").addEventListener("input", (e) => { state.names.b = e.target.value || "Traveler B"; save(); refreshNames(); pushSync({ names: { b: state.names.b } }); });
   // dates
   $("#date-start").addEventListener("change", (e) => { state.dates.start = e.target.value; $("#agent-date").value = e.target.value; save(); });
   $("#date-end").addEventListener("change", (e) => { state.dates.end = e.target.value; save(); });
@@ -418,6 +465,7 @@ function init() {
       renderActivities();
       renderItinerary();
       toast("All picks cleared");
+      pushSync({ picks: { a: [], b: [] } });
     }
   });
 
@@ -429,6 +477,94 @@ function init() {
       renderBudget();
     })
   );
+
+  setupSync();
+}
+
+// ── Live sync (Firebase) wiring ───────────────────────────────────────────
+function setupSync() {
+  const panel = $("#sync-panel");
+  const dot = $("#sync-dot");
+  const stateLbl = $("#sync-state");
+  const msg = $("#sync-msg");
+  const controls = $("#sync-controls");
+  const input = $("#room-input");
+  const joinBtn = $("#room-join");
+  const copyBtn = $("#room-copy");
+  const leaveBtn = $("#room-leave");
+
+  function render(status) {
+    const { available, enabled, room } = status;
+    if (!available) {
+      dot.className = "sync-dot off";
+      stateLbl.textContent = "not configured";
+      msg.innerHTML = "Add your Firebase config to <code>config.js</code> to turn on live, automatic sync across both devices. See <b>SETUP.md</b>. Until then, the <b>share-link</b> above works with no setup.";
+      controls.hidden = true;
+      return;
+    }
+    controls.hidden = false;
+    if (enabled) {
+      dot.className = "sync-dot on";
+      stateLbl.textContent = `live · trip “${room}”`;
+      msg.innerHTML = "You're synced! Picks and names update instantly on both devices. Share the invite link with your friend.";
+      input.value = room;
+      copyBtn.hidden = false;
+      leaveBtn.hidden = false;
+      joinBtn.textContent = "Switch trip";
+    } else {
+      dot.className = "sync-dot ready";
+      stateLbl.textContent = "ready";
+      msg.innerHTML = "Pick a shared trip code (any word you both use) and press start — then send your friend the invite link.";
+      copyBtn.hidden = true;
+      leaveBtn.hidden = true;
+      joinBtn.textContent = "Start / join live trip";
+    }
+  }
+
+  // initial state in case sync.js fired its status before we attached
+  render({ available: !!(window.TripSync && window.TripSync.available), enabled: !!(window.TripSync && window.TripSync.enabled && window.TripSync.enabled()), room: window.TripSync && window.TripSync.room ? window.TripSync.room() : null });
+
+  window.addEventListener("tripsync-status", (e) => render(e.detail));
+
+  // Incoming remote update → merge into local state and re-render everything.
+  window.addEventListener("tripsync-remote", (e) => applyRemoteState(e.detail));
+
+  joinBtn.addEventListener("click", async () => {
+    const code = (input.value || "").trim();
+    if (!code) { toast("Type a trip code first"); return; }
+    await window.TripSync.join(code);
+    // seed the room with whatever we have locally
+    pushSync({ names: state.names, picks: state.picks });
+    const link = `${location.origin}${location.pathname}?room=${encodeURIComponent(code.toLowerCase())}`;
+    history.replaceState({}, "", link + location.hash);
+    toast(`Live trip “${code}” started 🔄`);
+  });
+
+  copyBtn.addEventListener("click", () => {
+    const room = window.TripSync.room();
+    const link = `${location.origin}${location.pathname}?room=${encodeURIComponent(room)}`;
+    navigator.clipboard.writeText(link).then(
+      () => toast("Invite link copied 📤"),
+      () => prompt("Copy this invite link:", link)
+    );
+  });
+
+  leaveBtn.addEventListener("click", () => {
+    window.TripSync.leave();
+    history.replaceState({}, "", location.pathname + location.hash);
+    toast("Left the live trip");
+  });
+}
+
+// Merge a remote document into local state without losing what isn't included.
+function applyRemoteState(data) {
+  if (!data) return;
+  if (data.names) state.names = { ...state.names, ...data.names };
+  if (data.picks) state.picks = { a: data.picks.a || state.picks.a, b: data.picks.b || state.picks.b };
+  save();
+  syncSetupInputs();
+  refreshNames();
+  renderItinerary();
 }
 
 // re-render the spots where traveler names appear
