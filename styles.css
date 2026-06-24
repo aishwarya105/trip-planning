@@ -320,9 +320,9 @@ img { max-width: 100%; }
 .map-legend { display: inline-flex; gap: 14px; font-size: .82rem; font-weight: 700; white-space: nowrap; }
 .map-legend .lg { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-soft); }
 .map-legend .lg::before { content: ""; width: 10px; height: 10px; border-radius: 50%; }
-.map-legend .lg.act::before { background: #0e8f9e; }
-.map-legend .lg.eat::before { background: #d1495b; }
-.map-legend .lg.drink::before { background: #cf9836; }
+.map-legend .lg-act::before { background: #0e8f9e; }
+.map-legend .lg-eat::before { background: #d1495b; }
+.map-legend .lg-drink::before { background: #cf9836; }
 .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large { background: rgba(14,143,158,.25); }
 .marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div { background: var(--teal); color: #fff; font-weight: 800; }
 #trip-map { height: 460px; border-radius: var(--radius); border: 1px solid var(--line); box-shadow: var(--shadow); z-index: 0; }
