@@ -191,6 +191,7 @@ img { max-width: 100%; }
   display: flex; flex-direction: column; gap: 8px; position: relative; transition: box-shadow .15s, transform .15s, border-color .15s;
 }
 .act:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+.act-img { width: calc(100% + 36px); height: 150px; object-fit: cover; display: block; margin: -18px -18px 4px; border-radius: 14px 14px 0 0; background: var(--cream-2); }
 .act.matched { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(233,180,76,.4); }
 .act .top { display: flex; align-items: center; gap: 10px; }
 .act .icon { font-size: 1.6rem; }
@@ -275,6 +276,7 @@ img { max-width: 100%; }
 .food-card { display: flex; flex-direction: column; gap: 6px; background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--teal); border-radius: 14px; padding: 15px 16px; box-shadow: var(--shadow); text-decoration: none; color: var(--ink); transition: transform .12s ease, box-shadow .12s ease; }
 .food-card.drink { border-left-color: var(--terra); }
 .food-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.food-img { width: calc(100% + 32px); height: 140px; object-fit: cover; display: block; margin: -15px -16px 10px; border-radius: 11px 11px 0 0; background: var(--cream-2); }
 .food-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .food-name { font-weight: 800; font-size: 1.05rem; line-height: 1.25; }
 .food-top .tag.cost { flex: none; font-size: .7rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; }

@@ -233,6 +233,69 @@ const FOODSPOTS = [
     blurb: "Long-running local favourite for live music, sports nights and an easy crowd." },
 ];
 
+// ── Card images (keyword → photo) ─────────────────────────────────────────
+// Static GitHub Pages can't hold a backend, so cards pull a fitting travel
+// photo by keyword (served by loremflickr, freely licensed). Activity keys are
+// the activity ids; food keys are the FOODSPOTS ids. If an image ever fails to
+// load it's hidden gracefully and the card falls back to its text-only look.
+const IMG = {
+  // Activities
+  "ist-hagia": "hagia sophia istanbul",
+  "ist-topkapi": "topkapi palace istanbul",
+  "ist-bazaar": "grand bazaar istanbul",
+  "ist-cruise": "bosphorus istanbul boat sunset",
+  "ist-hammam": "turkish hammam bath",
+  "ist-cistern": "basilica cistern istanbul",
+  "ist-food": "turkish street food",
+  "ist-night": "istanbul rooftop night skyline",
+  "cap-balloon": "cappadocia hot air balloon",
+  "cap-cave": "cappadocia cave hotel sunset",
+  "cap-goreme": "goreme cappadocia rock church",
+  "cap-atv": "cappadocia valley landscape",
+  "cap-pottery": "turkish pottery wheel",
+  "coast-lagoon": "oludeniz blue lagoon beach",
+  "coast-paraglide": "oludeniz paragliding",
+  "coast-boat": "turkey gulet boat sea",
+  "coast-kaleici": "antalya kaleici harbour old town",
+  "coast-spa": "beach club spa turkey",
+  "coast-gorge": "saklikent gorge canyon",
+  "x-cooking": "turkish cooking class food",
+  "x-wine": "wine tasting cellar",
+  "x-pamukkale": "pamukkale travertine terraces",
+  "x-raki": "turkish meze raki table",
+
+  // Eat & drink
+  "f-ist-karakoy": "turkish meze restaurant",
+  "f-ist-ciya": "anatolian turkish food plates",
+  "f-ist-deraliye": "ottoman turkish cuisine",
+  "f-ist-murver": "fine dining rooftop istanbul",
+  "f-ist-kofte": "turkish kofte meatballs",
+  "f-ist-neolokal": "modern turkish fine dining",
+  "f-ist-mikla": "rooftop bar istanbul night",
+  "f-ist-360": "rooftop bar city view",
+  "f-ist-bank": "rooftop cocktail bar",
+  "f-ist-balkon": "rooftop bar beer sunset",
+  "f-ist-komun": "rooftop bar live music",
+  "f-cap-topdeck": "cave restaurant turkish",
+  "f-cap-pumpkin": "cave dining candlelight",
+  "f-cap-seki": "restaurant terrace cappadocia view",
+  "f-cap-elai": "restaurant terrace valley view",
+  "f-cap-bizimev": "turkish manti dumplings food",
+  "f-cap-rupa": "cocktail bar lounge",
+  "f-cap-redwine": "red wine bar cellar",
+  "f-cap-fatboys": "bar beer pub",
+  "f-cap-kocabag": "vineyard wine tasting",
+  "f-coast-seraser": "fine dining mediterranean plate",
+  "f-coast-arma": "seafood restaurant harbour",
+  "f-coast-balikci": "turkish fish meze meyhane",
+  "f-coast-yemenli": "grilled seafood meze",
+  "f-coast-fishmarket": "fish market grilled seafood",
+  "f-coast-sheffield": "irish pub beer",
+  "f-coast-tudors": "pub live music",
+  "f-coast-barstreet": "bar street nightlife",
+  "f-coast-deepblue": "beach bar night",
+};
+
 // ── Budget (per person, medium tier, ~9 nights) ───────────────────────────
 const BUDGET = {
   a: { label: "Aishwarya (from SFO)", intlFlight: 1025 },

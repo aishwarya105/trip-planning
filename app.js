@@ -67,6 +67,29 @@ function toast(msg) {
 }
 const typeLabel = { fun: "🎉 Fun", relax: "🌿 Relax", both: "✨ Both" };
 
+// ── Card images ───────────────────────────────────────────────────────────
+// A keyword photo per card. Deterministic (locked) so it stays the same across
+// reloads, lazy-loaded, and self-hiding via imgFail() if the host is ever down.
+const hashStr = (s) => { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return h; };
+function imgUrl(id) {
+  const kw = (typeof IMG !== "undefined" && IMG[id]) || "";
+  if (!kw) return "";
+  const tags = kw.trim().split(/\s+/).map(encodeURIComponent).join(",");
+  const lock = (Math.abs(hashStr(id)) % 999) + 1;
+  return `https://loremflickr.com/640/420/${tags}?lock=${lock}`;
+}
+function imgTag(id, alt, cls) {
+  const url = imgUrl(id);
+  if (!url) return "";
+  return `<img class="${cls}" loading="lazy" src="${url}" alt="${esc(alt)} photo" onerror="imgFail(this)">`;
+}
+// Hide a broken image and let the card fall back to its text-only layout.
+window.imgFail = function (img) {
+  const card = img.closest(".act, .food-card");
+  if (card) card.classList.add("no-img");
+  img.remove();
+};
+
 // ── Render: Visa ──────────────────────────────────────────────────────────
 function renderVisa() {
   const root = $("#visa-cards");
@@ -253,6 +276,7 @@ function renderActivities() {
     const matched = onA && onB;
     const card = el("div", `act ${matched ? "matched" : ""}`);
     card.innerHTML = `
+      ${imgTag(a.id, a.title, "act-img")}
       ${matched ? '<span class="match-flag">✨ You both want this</span>' : ""}
       <div class="top">
         <span class="icon">${a.icon}</span>
@@ -491,6 +515,7 @@ function renderFood() {
         card.target = "_blank";
         card.rel = "noopener";
         card.innerHTML = `
+          ${imgTag(s.id, s.name, "food-img")}
           <div class="food-top">
             <span class="food-name">${esc(s.name)}</span>
             <span class="tag cost">${s.cost}</span>
