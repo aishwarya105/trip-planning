@@ -96,37 +96,39 @@ const DOMESTIC = {
 //   The itinerary scheduler uses this to drop each pick into the right time of
 //   day and to warn you when a leg is over-booked. timeHint overrides the
 //   default clock label for time-bound things (sunrise balloon, sunset cruise…).
+// area: the neighbourhood — the scheduler keeps same-area picks on the same day
+//   so you're not criss-crossing town. Each carries [lat,lng] for the map.
 const ACTIVITIES = [
   // Istanbul
-  { id: "ist-hagia", city: "Istanbul", icon: "🕌", type: "fun", cost: "$", slot: "morning", title: "Hagia Sophia & Blue Mosque", desc: "The two icons of the old city, face to face across Sultanahmet square. Go early — the Blue Mosque closes to visitors at prayer times." },
-  { id: "ist-topkapi", city: "Istanbul", icon: "👑", type: "fun", cost: "$$", slot: "morning", title: "Topkapı Palace & Harem", desc: "Ottoman sultans' palace — courtyards, treasury and Bosphorus views. A solid half-day; arrive at opening to beat the queues." },
-  { id: "ist-bazaar", city: "Istanbul", icon: "🛍️", type: "fun", cost: "$", slot: "afternoon", title: "Grand Bazaar & Spice Bazaar", desc: "4,000 shops of lamps, carpets, tea and Turkish delight. Haggle gently." },
-  { id: "ist-cruise", city: "Istanbul", icon: "⛴️", type: "both", cost: "$$", slot: "evening", timeHint: "Sunset · ~6pm", title: "Bosphorus sunset cruise", desc: "Glide between two continents as the skyline turns gold. The signature moment." },
-  { id: "ist-hammam", city: "Istanbul", icon: "🛁", type: "relax", cost: "$$", slot: "afternoon", title: "Historic Turkish hammam", desc: "A 16th-century bathhouse scrub + foam massage. Pure reset after the flights — perfect for arrival day." },
-  { id: "ist-cistern", city: "Istanbul", icon: "🏛️", type: "fun", cost: "$", slot: "afternoon", title: "Basilica Cistern", desc: "Eerie underground forest of columns and Medusa heads. Cool and atmospheric — a quick hour." },
-  { id: "ist-food", city: "Istanbul", icon: "🥙", type: "fun", cost: "$", slot: "afternoon", title: "Kadıköy street-food tour", desc: "Ferry to the Asian side for the city's best eats away from the crowds." },
-  { id: "ist-night", city: "Istanbul", icon: "🌃", type: "fun", cost: "$$", slot: "evening", title: "Rooftop bars in Beyoğlu", desc: "Cocktails over the Golden Horn, live music and late-night energy." },
+  { id: "ist-hagia", city: "Istanbul", icon: "🕌", type: "fun", cost: "$", slot: "morning", area: "Sultanahmet", coords: [41.0086, 28.9802], title: "Hagia Sophia & Blue Mosque", desc: "The two icons of the old city, face to face across Sultanahmet square. Go early — the Blue Mosque closes to visitors at prayer times." },
+  { id: "ist-topkapi", city: "Istanbul", icon: "👑", type: "fun", cost: "$$", slot: "morning", area: "Sultanahmet", coords: [41.0115, 28.9834], title: "Topkapı Palace & Harem", desc: "Ottoman sultans' palace — courtyards, treasury and Bosphorus views. A solid half-day; arrive at opening to beat the queues." },
+  { id: "ist-bazaar", city: "Istanbul", icon: "🛍️", type: "fun", cost: "$", slot: "afternoon", area: "Sultanahmet", coords: [41.0106, 28.9680], title: "Grand Bazaar & Spice Bazaar", desc: "4,000 shops of lamps, carpets, tea and Turkish delight. Haggle gently." },
+  { id: "ist-cistern", city: "Istanbul", icon: "🏛️", type: "fun", cost: "$", slot: "afternoon", area: "Sultanahmet", coords: [41.0084, 28.9779], title: "Basilica Cistern", desc: "Eerie underground forest of columns and Medusa heads. Cool and atmospheric — a quick hour." },
+  { id: "ist-hammam", city: "Istanbul", icon: "🛁", type: "relax", cost: "$$", slot: "afternoon", area: "Sultanahmet", coords: [41.0083, 28.9709], title: "Historic Turkish hammam", desc: "A 16th-century bathhouse scrub + foam massage. Pure reset after the flights — perfect for arrival day." },
+  { id: "ist-cruise", city: "Istanbul", icon: "⛴️", type: "both", cost: "$$", slot: "evening", timeHint: "Sunset · ~6pm", area: "Bosphorus", coords: [41.0196, 28.9740], title: "Bosphorus sunset cruise", desc: "Glide between two continents as the skyline turns gold. The signature moment." },
+  { id: "ist-night", city: "Istanbul", icon: "🌃", type: "fun", cost: "$$", slot: "evening", area: "Beyoğlu", coords: [41.0340, 28.9770], title: "Rooftop bars in Beyoğlu", desc: "Cocktails over the Golden Horn, live music and late-night energy." },
+  { id: "ist-food", city: "Istanbul", icon: "🥙", type: "fun", cost: "$", slot: "afternoon", area: "Kadıköy", coords: [40.9901, 29.0270], title: "Kadıköy street-food tour", desc: "Ferry to the Asian side for the city's best eats away from the crowds." },
 
   // Cappadocia
-  { id: "cap-balloon", city: "Cappadocia", icon: "🎈", type: "both", cost: "$$$", slot: "morning", timeHint: "Dawn · ~5:30am", title: "Sunrise hot-air balloon", desc: "Hundreds of balloons over fairy chimneys at dawn. The bucket-list shot — book the very first morning in case wind cancels it." },
-  { id: "cap-cave", city: "Cappadocia", icon: "🪨", type: "relax", cost: "$$", slot: "evening", timeHint: "Sunset", title: "Cave hotel + valley sunset", desc: "Stay carved into the rock; watch Red Valley glow with a glass of wine." },
-  { id: "cap-goreme", city: "Cappadocia", icon: "⛪", type: "fun", cost: "$", slot: "afternoon", title: "Göreme Open-Air Museum", desc: "Cave churches with 1,000-year-old frescoes, a UNESCO site." },
-  { id: "cap-atv", city: "Cappadocia", icon: "🏍️", type: "fun", cost: "$$", slot: "afternoon", timeHint: "Golden hour · ~5pm", title: "ATV / horseback through valleys", desc: "Tear (or trot) through Love & Rose Valleys at golden hour." },
-  { id: "cap-pottery", city: "Cappadocia", icon: "🏺", type: "fun", cost: "$", slot: "afternoon", title: "Avanos pottery workshop", desc: "Throw a pot on a kick-wheel by the red Kızılırmak river." },
+  { id: "cap-balloon", city: "Cappadocia", icon: "🎈", type: "both", cost: "$$$", slot: "morning", timeHint: "Dawn · ~5:30am", area: "Göreme", coords: [38.6431, 34.8289], title: "Sunrise hot-air balloon", desc: "Hundreds of balloons over fairy chimneys at dawn. The bucket-list shot — book the very first morning in case wind cancels it." },
+  { id: "cap-cave", city: "Cappadocia", icon: "🪨", type: "relax", cost: "$$", slot: "evening", timeHint: "Sunset", area: "Göreme", coords: [38.6420, 34.8300], title: "Cave hotel + valley sunset", desc: "Stay carved into the rock; watch Red Valley glow with a glass of wine." },
+  { id: "cap-goreme", city: "Cappadocia", icon: "⛪", type: "fun", cost: "$", slot: "afternoon", area: "Göreme", coords: [38.6418, 34.8456], title: "Göreme Open-Air Museum", desc: "Cave churches with 1,000-year-old frescoes, a UNESCO site." },
+  { id: "cap-atv", city: "Cappadocia", icon: "🏍️", type: "fun", cost: "$$", slot: "afternoon", timeHint: "Golden hour · ~5pm", area: "Göreme", coords: [38.6450, 34.8200], title: "ATV / horseback through valleys", desc: "Tear (or trot) through Love & Rose Valleys at golden hour." },
+  { id: "cap-pottery", city: "Cappadocia", icon: "🏺", type: "fun", cost: "$", slot: "afternoon", area: "Avanos", coords: [38.7150, 34.8460], title: "Avanos pottery workshop", desc: "Throw a pot on a kick-wheel by the red Kızılırmak river." },
 
   // Coast (Antalya / Fethiye / Oludeniz)
-  { id: "coast-lagoon", city: "Coast", icon: "🏖️", type: "relax", cost: "$", slot: "fullday", title: "Ölüdeniz Blue Lagoon day", desc: "That turquoise postcard beach — swim, float, do nothing well." },
-  { id: "coast-paraglide", city: "Coast", icon: "🪂", type: "fun", cost: "$$$", slot: "morning", timeHint: "Morning winds", title: "Paraglide off Babadağ", desc: "Run off a 1,900m mountain and soar over the lagoon. Adrenaline peak." },
-  { id: "coast-boat", city: "Coast", icon: "⛵", type: "both", cost: "$$", slot: "fullday", title: "Gulet boat & 12 islands cruise", desc: "Wooden yacht, swim stops in hidden coves, lunch on deck." },
-  { id: "coast-kaleici", city: "Coast", icon: "🍊", type: "relax", cost: "$", slot: "evening", title: "Antalya old town (Kaleiçi)", desc: "Cobbled lanes, Roman harbour, orange trees and waterfront cafés — lovely at dusk." },
-  { id: "coast-spa", city: "Coast", icon: "💆", type: "relax", cost: "$$", slot: "afternoon", title: "Beach club & spa afternoon", desc: "Day bed, sea, and a massage. The 'relaxation' half of the trip, sorted." },
-  { id: "coast-gorge", city: "Coast", icon: "🥾", type: "fun", cost: "$", slot: "morning", title: "Saklıkent Gorge hike", desc: "Wade through an icy slot canyon between towering walls — go before midday heat." },
+  { id: "coast-lagoon", city: "Coast", icon: "🏖️", type: "relax", cost: "$", slot: "fullday", area: "Ölüdeniz", coords: [36.5500, 29.1160], title: "Ölüdeniz Blue Lagoon day", desc: "That turquoise postcard beach — swim, float, do nothing well." },
+  { id: "coast-paraglide", city: "Coast", icon: "🪂", type: "fun", cost: "$$$", slot: "morning", timeHint: "Morning winds", area: "Ölüdeniz", coords: [36.5530, 29.1300], title: "Paraglide off Babadağ", desc: "Run off a 1,900m mountain and soar over the lagoon. Adrenaline peak." },
+  { id: "coast-boat", city: "Coast", icon: "⛵", type: "both", cost: "$$", slot: "fullday", area: "Fethiye", coords: [36.6210, 29.1160], title: "Gulet boat & 12 islands cruise", desc: "Wooden yacht, swim stops in hidden coves, lunch on deck." },
+  { id: "coast-gorge", city: "Coast", icon: "🥾", type: "fun", cost: "$", slot: "morning", area: "Fethiye", coords: [36.4900, 29.4000], title: "Saklıkent Gorge hike", desc: "Wade through an icy slot canyon between towering walls — go before midday heat." },
+  { id: "coast-kaleici", city: "Coast", icon: "🍊", type: "relax", cost: "$", slot: "evening", area: "Antalya", coords: [36.8841, 30.7056], title: "Antalya old town (Kaleiçi)", desc: "Cobbled lanes, Roman harbour, orange trees and waterfront cafés — lovely at dusk." },
+  { id: "coast-spa", city: "Coast", icon: "💆", type: "relax", cost: "$$", slot: "afternoon", area: "Antalya", coords: [36.8770, 30.6390], title: "Beach club & spa afternoon", desc: "Day bed, sea, and a massage. The 'relaxation' half of the trip, sorted." },
 
   // Food & extras (region-flexible)
-  { id: "x-cooking", city: "Anywhere", icon: "🍳", type: "both", cost: "$$", slot: "afternoon", title: "Turkish cooking class", desc: "Roll your own gözleme and master mezze with a local family." },
-  { id: "x-wine", city: "Cappadocia", icon: "🍷", type: "relax", cost: "$$", slot: "evening", title: "Cappadocia wine tasting", desc: "Türkiye's oldest wine region — volcanic-soil reds in a cave cellar." },
-  { id: "x-pamukkale", city: "Detour", icon: "♨️", type: "relax", cost: "$$", slot: "fullday", title: "Pamukkale thermal terraces", desc: "Wade the white travertine pools above ancient Hierapolis — a full-day side trip." },
-  { id: "x-raki", city: "Anywhere", icon: "🍢", type: "fun", cost: "$$", slot: "evening", title: "Meze & rakı dinner night", desc: "A long table of small plates and aniseed spirit — the Turkish way to dine." },
+  { id: "x-cooking", city: "Anywhere", icon: "🍳", type: "both", cost: "$$", slot: "afternoon", area: "Sultanahmet", coords: [41.0082, 28.9784], title: "Turkish cooking class", desc: "Roll your own gözleme and master mezze with a local family." },
+  { id: "x-raki", city: "Anywhere", icon: "🍢", type: "fun", cost: "$$", slot: "evening", area: "Beyoğlu", coords: [41.0305, 28.9770], title: "Meze & rakı dinner night", desc: "A long table of small plates and aniseed spirit — the Turkish way to dine." },
+  { id: "x-wine", city: "Cappadocia", icon: "🍷", type: "relax", cost: "$$", slot: "evening", area: "Ürgüp", coords: [38.6310, 34.9130], title: "Cappadocia wine tasting", desc: "Türkiye's oldest wine region — volcanic-soil reds in a cave cellar." },
+  { id: "x-pamukkale", city: "Detour", icon: "♨️", type: "relax", cost: "$$", slot: "fullday", area: "Pamukkale", coords: [37.9203, 29.1206], title: "Pamukkale thermal terraces", desc: "Wade the white travertine pools above ancient Hierapolis — a full-day side trip." },
 ];
 
 // ── Suggested skeleton itinerary (9 nights) ───────────────────────────────
@@ -294,6 +296,28 @@ const IMG = {
   "f-coast-tudors": "pub live music",
   "f-coast-barstreet": "bar street nightlife",
   "f-coast-deepblue": "beach bar night",
+};
+
+// ── Eatery coordinates (for the map) ──────────────────────────────────────
+// Neighbourhood-level [lat, lng] per eatery id. Exact location is one tap away
+// via each card's "Open in Maps" link; these are for the overview map.
+const FOOD_COORDS = {
+  "f-ist-karakoy": [41.0256, 28.9770], "f-ist-ciya": [40.9897, 29.0277],
+  "f-ist-deraliye": [41.0078, 28.9770], "f-ist-murver": [41.0270, 28.9740],
+  "f-ist-kofte": [41.0085, 28.9758], "f-ist-neolokal": [41.0258, 28.9740],
+  "f-ist-mikla": [41.0300, 28.9745], "f-ist-360": [41.0320, 28.9772],
+  "f-ist-bank": [41.0245, 28.9760], "f-ist-balkon": [41.0305, 28.9755],
+  "f-ist-komun": [41.0240, 28.9810],
+  "f-cap-topdeck": [38.6425, 34.8295], "f-cap-pumpkin": [38.6420, 34.8310],
+  "f-cap-seki": [38.6300, 34.8060], "f-cap-elai": [38.6310, 34.8070],
+  "f-cap-bizimev": [38.7155, 34.8470], "f-cap-rupa": [38.6428, 34.8300],
+  "f-cap-redwine": [38.6430, 34.8290], "f-cap-fatboys": [38.6422, 34.8305],
+  "f-cap-kocabag": [38.6320, 34.8100],
+  "f-coast-seraser": [36.8840, 30.7050], "f-coast-arma": [36.8835, 30.7030],
+  "f-coast-balikci": [36.8845, 30.7060], "f-coast-yemenli": [36.8848, 30.7065],
+  "f-coast-fishmarket": [36.6215, 29.1155], "f-coast-sheffield": [36.8850, 30.7058],
+  "f-coast-tudors": [36.8847, 30.7052], "f-coast-barstreet": [36.6210, 29.1170],
+  "f-coast-deepblue": [36.6220, 29.1175],
 };
 
 // ── Pinned exact photos (override the keyword search for specific cards) ───

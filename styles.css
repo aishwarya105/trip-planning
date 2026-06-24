@@ -256,6 +256,7 @@ img { max-width: 100%; }
 .day-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin-top: 6px; }
 .day-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); }
 .day-card-head { background: var(--teal); color: #fff; font-weight: 800; padding: 8px 14px; font-size: .95rem; letter-spacing: .02em; }
+.day-area { font-weight: 600; opacity: .9; font-size: .85rem; }
 .slots { display: flex; flex-direction: column; }
 
 /* One time-of-day row */
@@ -309,6 +310,18 @@ img { max-width: 100%; }
 .fb-note-chip { font-size: .82rem; color: var(--ink-soft); background: var(--cream-2); border-radius: 8px; padding: 5px 9px; line-height: 1.35; }
 .fb-note-chip b { color: var(--ink); }
 .fb-consensus { align-self: flex-start; font-size: .76rem; font-weight: 800; color: var(--ink); background: var(--gold); border-radius: 999px; padding: 3px 11px; }
+
+/* ── Map ── */
+.map-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 14px; }
+.map-controls .spacer { flex: 1; }
+.map-legend { display: inline-flex; gap: 12px; font-size: .82rem; font-weight: 700; }
+.map-legend .lg.act { color: #0e8f9e; }
+.map-legend .lg.eat { color: #d1495b; }
+.map-legend .lg.drink { color: #cf9836; }
+#trip-map { height: 460px; border-radius: var(--radius); border: 1px solid var(--line); box-shadow: var(--shadow); z-index: 0; }
+.map-fallback { display: flex; align-items: center; justify-content: center; height: 100%; padding: 24px; text-align: center; color: var(--ink-soft); background: var(--cream-2); }
+.leaflet-popup-content { font-family: inherit; font-size: .9rem; line-height: 1.45; }
+.leaflet-popup-content a { font-weight: 700; color: var(--teal-deep); }
 
 /* ── Loved (vote consensus) ── */
 .loved-h { font-size: 1.05rem; margin: 16px 0 12px; display: flex; align-items: center; gap: 9px; }

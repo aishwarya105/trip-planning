@@ -9,6 +9,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Playfair+Display:ital,wght@0,700;0,800;1,700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <!-- Leaflet (free, no key) for the trip map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🇹🇷</text></svg>" />
 </head>
 <body>
@@ -23,6 +26,7 @@
         <a href="#flights">Flights</a>
         <a href="#activities">Activities</a>
         <a href="#itinerary">Itinerary</a>
+        <a href="#map">Map</a>
         <a href="#loved">Loved</a>
         <a href="#eat">Eat &amp; drink</a>
         <a href="#stay">Stay</a>
@@ -224,6 +228,29 @@
     </div>
   </section>
 
+  <!-- ── Map ── -->
+  <section class="section" id="map">
+    <div class="wrap">
+      <span class="kicker">See it on the map</span>
+      <h2>Everywhere, mapped 🗺️</h2>
+      <p class="lead">Every activity and place to eat &amp; drink, pinned on a live map so you can see how the trip clusters by neighbourhood. Tap a pin for details and a link to open it in Google Maps for the street view &amp; photos.</p>
+
+      <div class="map-controls" id="map-focus">
+        <button class="pill-btn active" data-focus="all">🇹🇷 All Türkiye</button>
+        <button class="pill-btn" data-focus="Istanbul">Istanbul</button>
+        <button class="pill-btn" data-focus="Cappadocia">Cappadocia</button>
+        <button class="pill-btn" data-focus="Coast">Coast</button>
+        <span class="spacer"></span>
+        <span class="map-legend">
+          <span class="lg act">● Activities</span>
+          <span class="lg eat">● Eat</span>
+          <span class="lg drink">● Drink</span>
+        </span>
+      </div>
+      <div id="trip-map"></div>
+    </div>
+  </section>
+
   <!-- ── Loved (vote consensus) ── -->
   <section class="section" id="loved">
     <div class="wrap">
@@ -296,6 +323,8 @@
 
   <div class="toast" id="toast"></div>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="config.js"></script>
   <script src="data.js"></script>
   <script src="google-images.js"></script>
