@@ -39,4 +39,11 @@ const CONFIG = {
   //   above, with the "Maps JavaScript API" enabled on it. Falls back to the
   //   free map automatically if the key is missing or Google fails to load.
   googleMap: false,
+
+  // ── Conversational AI (optional) ────────────────────────────────────────
+  // The chat widget works with NO setup as a smart built-in helper that
+  // answers from your trip data. For free-form conversation, deploy
+  // chat-proxy/worker.js to Cloudflare (it hides an Anthropic Claude key) and
+  // paste its URL here. Leave "" to use the built-in helper. See SETUP.md §5.
+  chatApi: "",
 };
