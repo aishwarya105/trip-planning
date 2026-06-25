@@ -32,4 +32,11 @@ const CONFIG = {
   // RESTRICT the key to your site (HTTP referrer aishwarya105.github.io/*).
   // Leave "" to keep the free Wikimedia photos. See SETUP.md §4.
   googlePlacesKey: "",
+
+  // ── Use Google Maps for the map (optional) ──────────────────────────────
+  // false → the free Leaflet/OpenStreetMap map (no key needed).
+  // true  → render the map with Google Maps instead. REQUIRES googlePlacesKey
+  //   above, with the "Maps JavaScript API" enabled on it. Falls back to the
+  //   free map automatically if the key is missing or Google fails to load.
+  googleMap: false,
 };

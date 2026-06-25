@@ -129,6 +129,11 @@ key, restricted to your site.
 7. Push. Cards now load each spot's real Google photo; if a lookup ever fails
    the existing keyword photo simply stays. 📸
 
+**Want the map itself to be Google Maps too?** With the key above in place,
+also enable **Maps JavaScript API** in Google Cloud, then set `googleMap: true`
+in `config.js`. The map renders with Google tiles + Street View; if the key is
+missing or Google fails to load, it falls back to the free OpenStreetMap map.
+
 *Cost control: in Cloud Console you can set a budget alert, and the key being
 domain-restricted means only your site can use it.*
 
