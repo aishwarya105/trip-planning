@@ -27,7 +27,25 @@
     const N = state.names;
 
     if (has("hello", " hi ", " hey", "hiya", "selam", "merhaba")) return `Merhaba! 👋 I'm your Türkiye trip helper. Ask me about visas, flights, what to do in each city, where to eat, your budget, or what you two have picked.`;
-    if (has("help", "what can you", "what do you")) return `I can help with:<br>🛂 visas · ✈️ flights · 🗓️ the plan & dates<br>🎈 what to do in <b>Istanbul / Cappadocia / the coast</b><br>🍽️ where to eat & drink · 🏨 hotels<br>💸 the budget · ❤️ what you've picked & both love<br>Just ask in your own words!`;
+    if (has("help", "what can you", "what do you")) return `I can help with:<br>✨ <b>build your whole itinerary</b> — try “plan us a fun, relaxed trip”<br>🛂 visas · ✈️ flights · 🗓️ the plan & dates<br>🎈 what to do in <b>Istanbul / Cappadocia / the coast</b><br>🍽️ where to eat & drink · 🏨 hotels<br>💸 the budget · ❤️ what you've picked & both love<br>Just ask in your own words!`;
+
+    // ✨ Generate a full itinerary from how fun / relaxed they want it.
+    if (has("generate", "auto-plan", "auto plan", "plan it", "plan us", "plan our", "plan for us", "plan a ", "plan me", "plan the trip", "build us", "build a plan", "build me", "make us a", "make a plan", "make me a", "create a plan", "create our", "organise", "organize", "put together", "fill the itinerary", "fill our", "do the planning", "sort out the plan", "decide for us")) {
+      if (typeof window.AutoPlan !== "undefined") {
+        const { vibe, pace } = window.AutoPlan.parse(q);
+        const ids = window.AutoPlan.run(vibe, pace, { fromChat: true });
+        if (ids) return `Done! ✨ I built you ${window.AutoPlan.describe(vibe, pace)}<br>Scroll up to <b>Our itinerary</b> to see it laid out day by day — change any card and the schedule re-flows. Want it more relaxed or more packed? Just tell me (e.g. “make it chiller” or “pack it fuller”).`;
+        return `No worries — I kept your current picks as they are. Say the word whenever you'd like a fresh plan.`;
+      }
+    }
+    // Quick tweaks to an existing plan.
+    if (has("more relax", "chiller", "calmer", "too packed", "too busy", "slow it down", "less packed", "more downtime", "pack it", "fuller", "busier", "more fun", "add more")) {
+      if (typeof window.AutoPlan !== "undefined") {
+        const { vibe, pace } = window.AutoPlan.parse(q);
+        const ids = window.AutoPlan.run(vibe, pace, { fromChat: true, force: true });
+        return `Tweaked it ✨ — now ${window.AutoPlan.describe(vibe, pace)}<br>Take a look in <b>Our itinerary</b> above.`;
+      }
+    }
     if (has("plan", "itinerary", "schedule", "overview", "summary", "route", "trip about")) return `🗺️ The plan: <b>Istanbul → Cappadocia → the Turquoise Coast</b> over ~9 nights in September — culture first, then Cappadocia's balloons & valleys, then beaches & boats on the coast. Your picked activities auto-slot into a day-by-day itinerary, grouped by neighbourhood with walking times.`;
     if (has("visa")) return `${N.a} (US passport) is <b>visa-free</b>. ${N.b} <b>needs a visa</b> — ${VISA.b.summary} Start it early!`;
     if (has("flight", "fly ", "flights", "airport", "airfare")) { const a = bestFlight("a"), b = bestFlight("b"); return `✈️ <b>${N.a}</b>: ${a.airline} SFO→IST (${a.type}, ~${a.price}).<br>✈️ <b>${N.b}</b>: ${b.airline} DEL→IST (${b.type}, ~${b.price}).<br>Aim to land in Istanbul the same day so you arrive together.`; }
