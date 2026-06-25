@@ -227,6 +227,29 @@
       <span class="kicker">The plan, taking shape</span>
       <h2>Our itinerary</h2>
       <p class="lead">A relaxed 9-night loop — Istanbul → Cappadocia → the coast. As you both pick, each activity drops into the right leg <em>and the right time of day</em> — morning, afternoon or evening. Gold ✨ is the stuff you both chose, and I'll warn you if a leg gets over-stuffed so the trip stays relaxed.</p>
+
+      <!-- ✨ AI auto-planner: fills the itinerary based on the vibe you want -->
+      <div class="auto-plan" id="auto-plan">
+        <div class="ap-head">
+          <h3>✨ Let me plan it for us</h3>
+          <p>Set the vibe and I'll fill the whole itinerary with activities that fit — then you can fine-tune any card.</p>
+        </div>
+        <div class="ap-controls">
+          <label class="ap-slider">
+            <span class="ap-ends"><span>🧘 Relaxed</span><span>Fun 🎉</span></span>
+            <input type="range" id="ap-vibe" min="0" max="100" value="55" aria-label="Relaxed to fun">
+          </label>
+          <label class="ap-slider">
+            <span class="ap-ends"><span>🐢 Easy-going</span><span>Packed ⚡</span></span>
+            <input type="range" id="ap-pace" min="0" max="100" value="50" aria-label="Easy-going to packed">
+          </label>
+        </div>
+        <p class="ap-summary" id="ap-summary"></p>
+        <div class="ap-actions">
+          <button class="btn btn-gold" id="ap-generate">✨ Generate our plan</button>
+        </div>
+      </div>
+
       <div class="timeline" id="timeline"></div>
     </div>
   </section>

@@ -622,6 +622,102 @@ const whoWants = (a) => {
 
 // Place one leg's picked activities into a fixed number of day grids.
 // Returns { days:[{morning,afternoon,evening}], overflow:[acts] }.
+// ── ✨ AI auto-planner ──────────────────────────────────────────────────────
+// Turns two dials — vibe (relaxed ↔ fun) and pace (easy ↔ packed) — into a full
+// set of picks, leg by leg, respecting each day's morning/afternoon/evening slots
+// so the itinerary lands well-paced (little to no overflow). Picks are set for
+// both travellers so the result reads as one shared, mutual itinerary.
+const clampPct = (n) => Math.max(0, Math.min(100, Number(n) || 0));
+const lerp = (a, b, t) => a + (b - a) * t;
+// Stable per-id jitter: same dials → same plan, but items still vary sensibly.
+function idJitter(id) {
+  let h = 2166136261;
+  for (let i = 0; i < id.length; i++) { h ^= id.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return ((h >>> 0) % 1000) / 1000;
+}
+
+function buildPlan(vibe, pace) {
+  vibe = clampPct(vibe); pace = clampPct(pace);
+  const chosen = [];
+  ITINERARY.forEach((leg) => {
+    if (!leg.dayCount) return;
+    const cands = ACTIVITIES.filter((a) => leg.activityCities.includes(a.city));
+    // type "fun" rises with the fun dial, "relax" with the relaxed end, "both"
+    // is a flexible signature experience that stays attractive at any setting.
+    const score = (a) => {
+      const typeW = a.type === "fun" ? vibe : a.type === "relax" ? (100 - vibe) : 62;
+      return typeW + idJitter(a.id) * 16;
+    };
+    const sorted = cands.slice().sort((x, y) => score(y) - score(x));
+    const perDay = lerp(1.3, 3.0, pace / 100);
+    const target = Math.max(1, Math.min(cands.length, Math.round(leg.dayCount * perDay)));
+    // One morning/afternoon/evening per day; a full-day outing eats a whole day.
+    const cap = { morning: leg.dayCount, afternoon: leg.dayCount, evening: leg.dayCount };
+    const picks = [];
+    for (const a of sorted) {
+      if (picks.length >= target) break;
+      if (a.slot === "fullday") {
+        if (cap.morning > 0 && cap.afternoon > 0) { cap.morning--; cap.afternoon--; picks.push(a.id); }
+      } else {
+        const k = (a.slot in cap) ? a.slot : "afternoon";
+        if (cap[k] > 0) { cap[k]--; picks.push(a.id); }
+      }
+    }
+    chosen.push(...picks);
+  });
+  return chosen;
+}
+
+function describePlan(vibe, pace) {
+  vibe = clampPct(vibe); pace = clampPct(pace);
+  const vibeWord = vibe >= 70 ? "lively and fun-first" : vibe >= 55 ? "fun, with room to breathe"
+    : vibe >= 45 ? "an even mix of buzz and calm" : vibe >= 30 ? "relaxed, with a few highlights" : "slow and restful";
+  const paceWord = pace >= 70 ? "packed days" : pace >= 55 ? "full-ish days" : pace >= 45 ? "a comfortable pace"
+    : pace >= 30 ? "easy days" : "lots of downtime";
+  const n = buildPlan(vibe, pace).length;
+  return `<b>${vibeWord}</b> with <b>${paceWord}</b> — about ${n} activities across the trip.`;
+}
+
+function applyPlan(ids) {
+  state.picks.a = ids.slice();
+  state.picks.b = ids.slice();
+  save();
+  renderActivities(); renderItinerary(); renderLoved(); renderBooking(); updateMapStyles();
+  pushSync({ picks: { a: state.picks.a, b: state.picks.b } });
+}
+
+// Generate and apply a plan. Returns the chosen ids, or null if the user
+// declined to overwrite existing picks.
+function runAutoPlan(vibe, pace, opts = {}) {
+  const ids = buildPlan(vibe, pace);
+  const hadPicks = ACTIVITIES.some(isPicked);
+  if (hadPicks && !opts.force) {
+    if (!confirm("Replace the current picks with a fresh auto-generated plan? (Your votes and notes are kept.)")) return null;
+  }
+  applyPlan(ids);
+  if (!opts.silent) {
+    toast(`✨ Planned ${ids.length} activities for both of you`);
+    const tl = document.getElementById("timeline");
+    if (tl && !opts.fromChat) tl.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  return ids;
+}
+
+// Parse loose language ("a fun, packed trip") into the two dials.
+function parsePlanWords(text) {
+  const t = " " + String(text || "").toLowerCase() + " ";
+  const has = (...ws) => ws.some((w) => t.includes(w));
+  let vibe = 55, pace = 50;
+  if (has("relax", "chill", "calm", "lazy", "unwind", "rest", "laid back", "laid-back", "mellow", "quiet", "peaceful")) vibe = 22;
+  if (has("fun", "exciting", "adventur", "thrill", "party", "wild", "lively", "action", "buzz", "energetic")) vibe = 82;
+  if (has("balanced", " mix", "even split", "bit of both")) vibe = 50;
+  if (has("pack", "busy", "busier", "fuller", "lots", "everything", "maximize", "maximise", "see it all", "action-packed", "jam", "cram")) pace = 82;
+  if (has("easy", "light", "few ", "slow", "spacious", "downtime", "leisure", "gentle", "chill", "lazy", "calmer", "relax")) pace = 26;
+  return { vibe, pace };
+}
+
+window.AutoPlan = { run: runAutoPlan, build: buildPlan, describe: describePlan, parse: parsePlanWords };
+
 function scheduleLeg(leg) {
   const acts = ACTIVITIES.filter((a) => isPicked(a) && leg.activityCities.includes(a.city));
   // Process neighbourhood by neighbourhood so each day stays local. Areas with a
@@ -1135,6 +1231,16 @@ function init() {
     $("#eat-sort").textContent = eatSort === "top" ? "⭐ Top-rated first ✓" : "⭐ Top-rated first";
     renderFood();
   });
+
+  // ✨ auto-planner
+  const apVibe = $("#ap-vibe"), apPace = $("#ap-pace"), apSummary = $("#ap-summary");
+  if (apVibe && apPace && apSummary) {
+    const refreshAp = () => { apSummary.innerHTML = "I'll aim for " + describePlan(+apVibe.value, +apPace.value); };
+    refreshAp();
+    apVibe.addEventListener("input", refreshAp);
+    apPace.addEventListener("input", refreshAp);
+    $("#ap-generate").addEventListener("click", () => runAutoPlan(+apVibe.value, +apPace.value));
+  }
 
   // agent
   $("#agent-run").addEventListener("click", runAgent);
