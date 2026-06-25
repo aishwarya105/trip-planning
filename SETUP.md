@@ -129,8 +129,37 @@ key, restricted to your site.
 7. Push. Cards now load each spot's real Google photo; if a lookup ever fails
    the existing keyword photo simply stays. 📸
 
+**Want the map itself to be Google Maps too?** With the key above in place,
+also enable **Maps JavaScript API** in Google Cloud, then set `googleMap: true`
+in `config.js`. The map renders with Google tiles + Street View; if the key is
+missing or Google fails to load, it falls back to the free OpenStreetMap map.
+
 *Cost control: in Cloud Console you can set a budget alert, and the key being
 domain-restricted means only your site can use it.*
+
+---
+
+## 5. Conversational AI chat (optional) — ~10 minutes
+
+The chat bubble (bottom-right) already works as a **built-in helper** that
+answers from your trip data — no setup. To make it a free-form conversational
+assistant, give it an Anthropic Claude key behind a Worker (key stays hidden).
+
+1. Get an API key at **console.anthropic.com** (Settings → API Keys).
+2. Deploy the proxy — same as the flights Worker:
+   - **dash.cloudflare.com → Workers & Pages → Create → Worker**, name it
+     `turkiye-chat`, **Deploy**, then **Edit code**.
+   - Paste the contents of **`chat-proxy/worker.js`**, **Deploy**.
+   - **Settings → Variables and Secrets** → add `ANTHROPIC_KEY` = your key
+     *(type: Secret)*. Optionally add `ANTHROPIC_MODEL` *(Text)* to pick a model.
+3. Copy the Worker URL and set it in **`config.js`**:
+   ```js
+   chatApi: "https://turkiye-chat.<you>.workers.dev",
+   ```
+4. Push. The chat now answers in natural language, aware of your trip and your
+   current picks. If the service is ever unreachable it falls back to the
+   built-in helper. *(Costs are per-message and tiny on the default fast model;
+   set usage limits in the Anthropic console for peace of mind.)*
 
 ---
 
@@ -141,6 +170,8 @@ domain-restricted means only your site can use it.*
 | Live flight prices | `flightsApi` | ✅ falls back to estimates |
 | Real-time sync | `firebase` | ✅ falls back to share-links |
 | Exact place photos | `googlePlacesKey` | ✅ falls back to free Wikimedia photos |
+| Google Maps map | `googleMap` (+ key) | ✅ falls back to free OpenStreetMap |
+| Conversational AI chat | `chatApi` | ✅ falls back to built-in helper |
 
 Nothing here costs money at this usage level. Always confirm visa rules and
 final fares on the official sites before booking.

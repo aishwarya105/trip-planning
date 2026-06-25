@@ -823,20 +823,14 @@ function renderFood() {
 let tripMap = null;
 let tripLayer = null; // cluster group if available, else the map itself
 let tripMarkers = [];
+let googleMap = null, googleInfo = null, googleClusterer = null, googleMarkers = [];
 let mapMode = "all"; // "all" | "shortlist"
 const MAP_COLORS = { act: "#0e8f9e", eat: "#d1495b", drink: "#cf9836" };
 const regionOf = (city) => (city === "Cappadocia" ? "Cappadocia" : city === "Coast" || city === "Detour" ? "Coast" : "Istanbul");
 const gmapsQuery = (q) => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q);
 
-function renderMap() {
-  const host = $("#trip-map");
-  if (!host) return;
-  if (typeof L === "undefined") {
-    host.innerHTML = `<div class="map-fallback">The interactive map couldn't load here — you can still open any place from its card's “Open in Maps” link.</div>`;
-    return;
-  }
-  if (tripMap) { updateMapStyles(); return; }
-
+// Build the shared list of pins (activities + eateries) once.
+function buildMapPins() {
   const pins = [];
   ACTIVITIES.forEach((a) => {
     if (a.coords) pins.push({ id: a.id, coords: a.coords, region: regionOf(a.city), kind: "act",
@@ -847,60 +841,129 @@ function renderMap() {
     if (c) pins.push({ id: f.id, coords: c, region: regionOf(f.city), kind: f.kind === "drink" ? "drink" : "eat",
       label: `${f.kind === "drink" ? "🍸" : "🍽️"} ${f.name}`, sub: f.area, link: mapsLink(f) });
   });
+  return pins;
+}
+// Status of a pin given picks/votes → drives colour + popup text.
+function mapStatus(id) {
+  const act = ACTIVITIES.find((a) => a.id === id);
+  const pickedBoth = act && state.picks.a.includes(id) && state.picks.b.includes(id);
+  const pickedAny = act && (state.picks.a.includes(id) || state.picks.b.includes(id));
+  const love = bothLove(id), oneUp = likedByOne(id);
+  return { star: love || pickedBoth, oneUp, pickedAny,
+    text: love ? "✨ You both love this" : pickedBoth ? "✨ You both picked this" : oneUp ? "👍 Liked by one of you" : pickedAny ? "👍 On the shortlist" : "" };
+}
+const popupHtml = (label, sub, statusText, link) =>
+  `<b>${esc(label)}</b><br><span style="color:#4a5a64">${esc(sub)}</span>${statusText ? `<br><b style="color:#cf9836">${statusText}</b>` : ""}<br><a href="${link}" target="_blank" rel="noopener">Open in Google Maps ↗</a>`;
 
+// ── Dispatcher: Google Maps if opted-in + keyed, else free Leaflet map ─────
+function renderMap() {
+  const host = $("#trip-map");
+  if (!host) return;
+  if (googleMap) { updateMapStyles(); return; }
+  if (tripMap) { updateMapStyles(); return; }
+  const useGoogle = typeof CONFIG !== "undefined" && CONFIG.googlePlacesKey && CONFIG.googleMap;
+  if (useGoogle) { renderGoogleMap(); return; } // async; falls back to Leaflet on failure
+  if (typeof L === "undefined") {
+    host.innerHTML = `<div class="map-fallback">The interactive map couldn't load here — you can still open any place from its card's “Open in Maps” link.</div>`;
+    return;
+  }
+  renderLeafletMap();
+}
+function updateMapStyles() { if (googleMap) updateGoogleStyles(); else updateLeafletStyles(); }
+function focusMap(region) { if (googleMap) focusGoogleMap(region); else focusLeafletMap(region); }
+
+// ── Leaflet + OpenStreetMap (free, default) ───────────────────────────────
+function renderLeafletMap() {
+  const pins = buildMapPins();
   tripMap = L.map("trip-map", { scrollWheelZoom: false });
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 18, attribution: "© OpenStreetMap contributors",
-  }).addTo(tripMap);
-
-  // Cluster overlapping pins (so far-apart regions and tight neighbourhoods both
-  // read clearly). Falls back to plain markers if the plugin didn't load.
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 18, attribution: "© OpenStreetMap contributors" }).addTo(tripMap);
   tripLayer = typeof L.markerClusterGroup === "function"
     ? L.markerClusterGroup({ maxClusterRadius: 44, showCoverageOnHover: false, spiderfyOnMaxZoom: true }).addTo(tripMap)
     : tripMap;
-
   tripMarkers = pins.map((p) => {
     const m = L.circleMarker(p.coords, { radius: 7, color: "#fff", weight: 2, fillColor: MAP_COLORS[p.kind], fillOpacity: 0.95 }).bindPopup("");
     Object.assign(m, { placeId: p.id, tripKind: p.kind, tripRegion: p.region, tripCoords: p.coords, baseLabel: p.label, sub: p.sub, link: p.link });
     tripLayer.addLayer(m);
     return m;
   });
-  updateMapStyles();
-  focusMap("all");
+  updateLeafletStyles();
+  focusLeafletMap("all");
 }
-
-// Recolour / filter pins to reflect picks & votes (gold = you both love/picked).
-function updateMapStyles() {
+function updateLeafletStyles() {
   if (!tripMap || !tripMarkers.length) return;
   tripMarkers.forEach((m) => {
-    const id = m.placeId;
-    const act = ACTIVITIES.find((a) => a.id === id);
-    const pickedBoth = act && state.picks.a.includes(id) && state.picks.b.includes(id);
-    const pickedAny = act && (state.picks.a.includes(id) || state.picks.b.includes(id));
-    const love = bothLove(id), oneUp = likedByOne(id);
-    const star = love || pickedBoth;
-
-    if (mapMode === "shortlist" && !inShortlist(id)) {
-      if (tripLayer.hasLayer(m)) tripLayer.removeLayer(m);
-      return;
-    }
+    const st = mapStatus(m.placeId);
+    if (mapMode === "shortlist" && !inShortlist(m.placeId)) { if (tripLayer.hasLayer(m)) tripLayer.removeLayer(m); return; }
     if (!tripLayer.hasLayer(m)) tripLayer.addLayer(m);
-
-    m.setStyle(star
+    m.setStyle(st.star
       ? { radius: 10, color: "#b8860b", weight: 3, fillColor: "#e9b44c", fillOpacity: 1 }
-      : { radius: oneUp || pickedAny ? 8 : 7, color: "#fff", weight: 2, fillColor: MAP_COLORS[m.tripKind], fillOpacity: 0.95 });
-    if (star && m.bringToFront) m.bringToFront();
-
-    const status = love ? "✨ You both love this" : pickedBoth ? "✨ You both picked this" : oneUp ? "👍 Liked by one of you" : pickedAny ? "👍 On the shortlist" : "";
-    m.setPopupContent(`<b>${esc(m.baseLabel)}</b><br><span style="color:#4a5a64">${esc(m.sub)}</span>${status ? `<br><b style="color:#cf9836">${status}</b>` : ""}<br><a href="${m.link}" target="_blank" rel="noopener">Open in Google Maps ↗</a>`);
+      : { radius: st.oneUp || st.pickedAny ? 8 : 7, color: "#fff", weight: 2, fillColor: MAP_COLORS[m.tripKind], fillOpacity: 0.95 });
+    if (st.star && m.bringToFront) m.bringToFront();
+    m.setPopupContent(popupHtml(m.baseLabel, m.sub, st.text, m.link));
   });
 }
-
-function focusMap(region) {
+function focusLeafletMap(region) {
   if (!tripMap || !tripMarkers.length) return;
   const ms = region === "all" ? tripMarkers : tripMarkers.filter((m) => m.tripRegion === region);
   if (!ms.length) return;
   tripMap.fitBounds(L.latLngBounds(ms.map((m) => m.tripCoords)), { padding: [40, 40], maxZoom: region === "all" ? 7 : 13 });
+}
+
+// ── Google Maps (opt-in via CONFIG.googleMap + googlePlacesKey) ────────────
+function ensureGoogleMaps() {
+  const KEY = (typeof CONFIG !== "undefined" && CONFIG.googlePlacesKey) || "";
+  if (!KEY) return Promise.reject(new Error("no key"));
+  if (!(window.google && google.maps && google.maps.importLibrary)) {
+    ((g) => { let h, a, k, b = window; const p = "The Google Maps JavaScript API", c = "google", l = "importLibrary", q = "__ib__", m = document; b = b[c] || (b[c] = {}); const d = b.maps || (b.maps = {}), r = new Set(), e = new URLSearchParams(), u = () => h || (h = new Promise((f, n) => { a = m.createElement("script"); e.set("libraries", [...r] + ""); for (k in g) e.set(k.replace(/[A-Z]/g, (t) => "_" + t[0].toLowerCase()), g[k]); e.set("callback", c + ".maps." + q); a.src = "https://maps." + c + "apis.com/maps/api/js?" + e; d[q] = f; a.onerror = () => (h = n(Error(p + " could not load."))); a.nonce = (m.querySelector("script[nonce]") || {}).nonce || ""; m.head.append(a); })); d[l] ? console.warn(p + " only loads once. Ignoring:", g) : (d[l] = (f, ...n) => r.add(f) && u().then(() => d[l](f, ...n))); })({ key: KEY, v: "weekly" });
+  }
+  return google.maps.importLibrary("maps");
+}
+const gIcon = (fill, scale, stroke, weight) => ({ path: google.maps.SymbolPath.CIRCLE, fillColor: fill, fillOpacity: 0.95, scale, strokeColor: stroke, strokeWeight: weight });
+
+async function renderGoogleMap() {
+  const host = $("#trip-map");
+  try {
+    const { Map, InfoWindow } = await ensureGoogleMaps();
+    const pins = buildMapPins();
+    googleMap = new Map(host, { center: { lat: 39, lng: 35 }, zoom: 6, mapTypeControl: false, streetViewControl: true, fullscreenControl: true });
+    googleInfo = new InfoWindow();
+    googleMarkers = pins.map((p) => {
+      const m = new google.maps.Marker({ position: { lat: p.coords[0], lng: p.coords[1] }, title: p.label.replace(/^\S+\s/, ""), icon: gIcon(MAP_COLORS[p.kind], 7, "#fff", 2) });
+      Object.assign(m, { placeId: p.id, tripKind: p.kind, tripRegion: p.region, tripCoords: p.coords, baseLabel: p.label, sub: p.sub, link: p.link });
+      m.addListener("click", () => { const st = mapStatus(p.id); googleInfo.setContent(popupHtml(m.baseLabel, m.sub, st.text, m.link)); googleInfo.open(googleMap, m); });
+      return m;
+    });
+    googleClusterer = window.markerClusterer ? new markerClusterer.MarkerClusterer({ map: googleMap, markers: [] }) : null;
+    updateGoogleStyles();
+    focusGoogleMap("all");
+  } catch (e) {
+    console.warn("Google Maps unavailable — using the free map.", e);
+    googleMap = null;
+    if (typeof L !== "undefined") renderLeafletMap();
+    else if (host) host.innerHTML = `<div class="map-fallback">The map couldn't load — open any place from its card's “Open in Maps” link.</div>`;
+  }
+}
+function updateGoogleStyles() {
+  if (!googleMap || !googleMarkers.length) return;
+  const visible = [];
+  googleMarkers.forEach((m) => {
+    if (mapMode === "shortlist" && !inShortlist(m.placeId)) { m.setMap(null); return; }
+    const st = mapStatus(m.placeId);
+    m.setIcon(st.star ? gIcon("#e9b44c", 9, "#b8860b", 3) : gIcon(MAP_COLORS[m.tripKind], st.oneUp || st.pickedAny ? 7 : 6, "#fff", 2));
+    if (st.star && m.setZIndex) m.setZIndex(999);
+    visible.push(m);
+    if (!googleClusterer) m.setMap(googleMap);
+  });
+  if (googleClusterer) { googleClusterer.clearMarkers(); googleClusterer.addMarkers(visible); }
+}
+function focusGoogleMap(region) {
+  if (!googleMap || !googleMarkers.length) return;
+  const ms = region === "all" ? googleMarkers : googleMarkers.filter((m) => m.tripRegion === region);
+  if (!ms.length) return;
+  const b = new google.maps.LatLngBounds();
+  ms.forEach((m) => b.extend({ lat: m.tripCoords[0], lng: m.tripCoords[1] }));
+  googleMap.fitBounds(b, 40);
+  google.maps.event.addListenerOnce(googleMap, "idle", () => { if (googleMap.getZoom() > (region === "all" ? 7 : 13)) googleMap.setZoom(region === "all" ? 7 : 13); });
 }
 
 // ── Render: Hotels ────────────────────────────────────────────────────────

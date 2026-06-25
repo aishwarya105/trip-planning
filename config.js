@@ -32,4 +32,18 @@ const CONFIG = {
   // RESTRICT the key to your site (HTTP referrer aishwarya105.github.io/*).
   // Leave "" to keep the free Wikimedia photos. See SETUP.md §4.
   googlePlacesKey: "",
+
+  // ── Use Google Maps for the map (optional) ──────────────────────────────
+  // false → the free Leaflet/OpenStreetMap map (no key needed).
+  // true  → render the map with Google Maps instead. REQUIRES googlePlacesKey
+  //   above, with the "Maps JavaScript API" enabled on it. Falls back to the
+  //   free map automatically if the key is missing or Google fails to load.
+  googleMap: false,
+
+  // ── Conversational AI (optional) ────────────────────────────────────────
+  // The chat widget works with NO setup as a smart built-in helper that
+  // answers from your trip data. For free-form conversation, deploy
+  // chat-proxy/worker.js to Cloudflare (it hides an Anthropic Claude key) and
+  // paste its URL here. Leave "" to use the built-in helper. See SETUP.md §5.
+  chatApi: "",
 };
