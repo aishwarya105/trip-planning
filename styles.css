@@ -549,3 +549,19 @@ img { max-width: 100%; }
   .budget-table td { padding: 9px 4px; }
   .eat-grid, .loved-grid { grid-template-columns: 1fr; }
 }
+
+/* ── Tabbed navigation ── */
+.nav .links .tab {
+  background: none; border: 0; cursor: pointer; font: inherit;
+  padding: 7px 13px; border-radius: 999px; color: var(--ink-soft);
+  font-weight: 700; font-size: .9rem; white-space: nowrap;
+  transition: background .15s, color .15s;
+}
+.nav .links .tab:hover { background: var(--cream-2); color: var(--teal-deep); }
+.nav .links .tab.active { background: var(--teal); color: #fff; }
+.section.tab-hide { display: none; }
+.section { scroll-margin-top: 72px; }
+@media (max-width: 600px) {
+  .nav .links { max-width: none; }
+  .nav .links .tab { padding: 6px 11px; font-size: .84rem; }
+}

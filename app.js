@@ -696,6 +696,7 @@ function runAutoPlan(vibe, pace, opts = {}) {
   }
   applyPlan(ids);
   if (!opts.silent) {
+    if (typeof activateTab === "function") activateTab("plan"); // itinerary lives on the Plan tab
     toast(`✨ Planned ${ids.length} activities for both of you`);
     const tl = document.getElementById("timeline");
     if (tl && !opts.fromChat) tl.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1129,6 +1130,62 @@ function syncSetupInputs() {
   document.querySelectorAll("#whoami button").forEach((b) => b.classList.toggle("active", b.dataset.who === state.who));
 }
 
+// ── Tabbed layout ──────────────────────────────────────────────────────────
+// Groups the long single-scroll page into a few calm tabs. Progressive
+// enhancement: without JS every section just shows (the nav anchors still work).
+const TABS = [
+  { id: "overview", label: "🧭 Overview", sections: ["about", "visa", "flights"] },
+  { id: "plan", label: "🎈 Plan", sections: ["activities", "share", "itinerary", "map", "loved"] },
+  { id: "eatstay", label: "🍽️ Eat & stay", sections: ["eat", "stay"] },
+  { id: "logistics", label: "💸 Book & budget", sections: ["booking", "budget"] },
+];
+let activeTab = TABS[0].id;
+const tabForSection = (secId) => (TABS.find((t) => t.sections.includes(secId)) || {}).id;
+
+function activateTab(tabId, opts = {}) {
+  const tab = TABS.find((t) => t.id === tabId);
+  if (!tab) return;
+  activeTab = tabId;
+  TABS.forEach((t) => t.sections.forEach((s) => {
+    const el = document.getElementById(s);
+    if (el) el.classList.toggle("tab-hide", t.id !== tabId);
+  }));
+  document.querySelectorAll(".nav .links .tab").forEach((b) => b.classList.toggle("active", b.dataset.tab === tabId));
+  // Leaflet measures 0×0 while hidden — nudge it once its tab is visible.
+  if (tabId === "plan") { try { if (tripMap && tripMap.invalidateSize) setTimeout(() => tripMap.invalidateSize(), 60); } catch (_) {} }
+  if (opts.scroll) {
+    const first = document.getElementById(tab.sections[0]);
+    if (first) window.scrollTo({ top: Math.max(0, first.offsetTop - 60), behavior: "smooth" });
+  }
+}
+
+function setupTabs() {
+  const links = document.querySelector(".nav .links");
+  if (!links) return;
+  links.innerHTML = "";
+  TABS.forEach((t) => {
+    const b = document.createElement("button");
+    b.className = "tab";
+    b.dataset.tab = t.id;
+    b.textContent = t.label;
+    b.addEventListener("click", () => activateTab(t.id, { scroll: true }));
+    links.appendChild(b);
+  });
+  // Route in-page anchors (hero CTAs etc.) to the right tab, then scroll.
+  document.querySelectorAll('a[href^="#"]').forEach((a) => {
+    a.addEventListener("click", (e) => {
+      const id = a.getAttribute("href").slice(1);
+      const tab = tabForSection(id);
+      if (!tab) return;
+      e.preventDefault();
+      activateTab(tab);
+      const el = document.getElementById(id);
+      if (el) setTimeout(() => window.scrollTo({ top: Math.max(0, el.offsetTop - 60), behavior: "smooth" }), 40);
+    });
+  });
+  activateTab(activeTab);
+}
+
 function init() {
   applyIncomingShare();
   syncSetupInputs();
@@ -1275,6 +1332,7 @@ function init() {
   );
 
   setupSync();
+  setupTabs();
 }
 
 // ── Live sync (Firebase) wiring ───────────────────────────────────────────
