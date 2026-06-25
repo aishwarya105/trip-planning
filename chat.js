@@ -136,8 +136,12 @@
     log = panel.querySelector("#chat-log");
     input = panel.querySelector("#chat-text");
 
-    const open = () => { panel.hidden = false; btn.classList.add("hide"); input.focus(); if (!opened) { opened = true; addMsg("bot", `Merhaba! 👋 I can help you plan — ask me anything about the trip, or tap a suggestion below.`); } };
-    const close = () => { panel.hidden = true; btn.classList.remove("hide"); };
+    // Drive visibility with an inline style as well as [hidden]. An inline
+    // display always wins over the stylesheet's `display:flex`, so closing
+    // works even if an older/cached CSS lacks the [hidden] rule.
+    const open = () => { panel.hidden = false; panel.style.display = "flex"; btn.classList.add("hide"); input.focus(); if (!opened) { opened = true; addMsg("bot", `Merhaba! 👋 I can help you plan — ask me anything about the trip, or tap a suggestion below.`); } };
+    const close = () => { panel.hidden = true; panel.style.display = "none"; btn.classList.remove("hide"); };
+    close(); // start hidden regardless of stylesheet state
     btn.addEventListener("click", open);
     panel.querySelector(".chat-close").addEventListener("click", close);
     panel.querySelector("#chat-form").addEventListener("submit", (e) => { e.preventDefault(); send(input.value); });
