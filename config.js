@@ -22,7 +22,14 @@ const CONFIG = {
   //     projectId: "your-app",
   //     appId: "1:...:web:...",
   //   },
-  firebase: null,
+  firebase: {
+    apiKey: "AIzaSyBaEBwZlCF7Kdjt3d__BeqNfqsdbqjJYDk",
+    authDomain: "trip-planning-82f06.firebaseapp.com",
+    projectId: "trip-planning-82f06",
+    storageBucket: "trip-planning-82f06.firebasestorage.app",
+    messagingSenderId: "1072958669831",
+    appId: "1:1072958669831:web:371a091defe0be276e56a2",
+  },
 
   // ── Exact place photos (Google Places) — optional upgrade ───────────────
   // By default the cards already show free real photos from Wikimedia Commons
