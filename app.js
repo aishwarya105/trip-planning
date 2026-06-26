@@ -1336,6 +1336,13 @@ function init() {
 }
 
 // ── Live sync (Firebase) wiring ───────────────────────────────────────────
+// A hard-to-guess trip code so an invite link works like a private bearer token.
+function secureCode() {
+  const bytes = new Uint8Array(6);
+  (window.crypto || window.msCrypto).getRandomValues(bytes);
+  return "trip-" + Array.from(bytes, (b) => b.toString(36)).join("").slice(0, 9);
+}
+
 function setupSync() {
   const panel = $("#sync-panel");
   const dot = $("#sync-dot");
@@ -1368,7 +1375,8 @@ function setupSync() {
     } else {
       dot.className = "sync-dot ready";
       stateLbl.textContent = "ready";
-      msg.innerHTML = "Pick a shared trip code (any word you both use) and press start — then send your friend the invite link.";
+      if (!input.value) input.value = secureCode();
+      msg.innerHTML = "Press start to open a live trip, then send your friend the invite link. The code is your private key — anyone with the link can see and edit the trip, so only share it with your travel companions.";
       copyBtn.hidden = true;
       leaveBtn.hidden = true;
       joinBtn.textContent = "Start / join live trip";

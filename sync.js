@@ -31,6 +31,20 @@ window.TripSync = api;
     docModule = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
     const app = initializeApp(cfg);
     db = docModule.getFirestore(app);
+
+    // Best-effort anonymous sign-in. The locked-down security rules require an
+    // authenticated user (see firestore.rules), and anonymous auth gives every
+    // visitor an identity without a login screen. If Anonymous Auth isn't
+    // enabled in the Firebase console yet, we carry on unauthenticated so the
+    // app keeps working under the old open rules — then it tightens up
+    // automatically once you enable it and publish the new rules.
+    try {
+      const authModule = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
+      const auth = authModule.getAuth(app);
+      await authModule.signInAnonymously(auth);
+    } catch (authErr) {
+      console.warn("Anonymous sign-in unavailable — continuing without auth for now.", authErr);
+    }
   } catch (e) {
     console.warn("Firebase failed to load — falling back to share-link mode.", e);
     fire("tripsync-status", { available: false, enabled: false, room: null });
