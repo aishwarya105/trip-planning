@@ -7,6 +7,7 @@
 // ─────────────────────────────────────────────────────────────────────────
 
 const fire = (name, detail) => window.dispatchEvent(new CustomEvent(name, { detail }));
+const errText = (e) => (e && (e.code || e.message)) || "unknown error";
 
 let api = {
   available: false,
@@ -42,8 +43,10 @@ window.TripSync = api;
       const authModule = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
       const auth = authModule.getAuth(app);
       await authModule.signInAnonymously(auth);
+      api.authed = true;
     } catch (authErr) {
       console.warn("Anonymous sign-in unavailable — continuing without auth for now.", authErr);
+      api.authed = false;
     }
   } catch (e) {
     console.warn("Firebase failed to load — falling back to share-link mode.", e);
@@ -66,12 +69,20 @@ window.TripSync = api;
     currentRoom = code;
     localStorage.setItem("trip-room", code);
     const ref = doc(db, "trips", code);
+    let firstSnap = true;
+    // "connecting" until the first successful snapshot proves reads are allowed.
+    fire("tripsync-status", { available: true, enabled: true, room: code, live: false });
     unsub = onSnapshot(
       ref,
-      (snap) => { if (snap.exists()) fire("tripsync-remote", snap.data()); },
-      (err) => console.warn("sync snapshot error", err)
+      (snap) => {
+        if (firstSnap) { firstSnap = false; fire("tripsync-status", { available: true, enabled: true, room: code, live: true }); }
+        if (snap.exists()) fire("tripsync-remote", snap.data());
+      },
+      (err) => {
+        console.error("sync snapshot error", err);
+        fire("tripsync-status", { available: true, enabled: true, room: code, error: errText(err) });
+      }
     );
-    fire("tripsync-status", { available: true, enabled: true, room: code });
   };
 
   api.leave = function () {
@@ -88,7 +99,8 @@ window.TripSync = api;
     try {
       await setDoc(doc(db, "trips", currentRoom), { ...partial, updatedAt: Date.now() }, { merge: true });
     } catch (e) {
-      console.warn("sync push failed", e);
+      console.error("sync push failed", e);
+      fire("tripsync-status", { available: true, enabled: true, room: currentRoom, error: errText(e) });
     }
   };
 

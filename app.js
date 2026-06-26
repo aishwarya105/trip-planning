@@ -1364,12 +1364,23 @@ function setupSync() {
       return;
     }
     controls.hidden = false;
-    if (enabled) {
-      dot.className = "sync-dot on";
-      stateLbl.textContent = `live · trip “${room}”`;
-      msg.innerHTML = "You're synced! Picks and names update instantly on both devices. Share the invite link with your friend.";
-      input.value = room;
+    if (status.error) {
+      dot.className = "sync-dot off";
+      stateLbl.textContent = "sync blocked";
+      msg.innerHTML = `⚠️ Joined trip “${room}”, but the database <b>blocked the request</b> (<code>${esc(status.error)}</code>). This almost always means <b>Anonymous sign-in isn't enabled</b> — open Firebase → <b>Authentication → Sign-in method → Anonymous → Enable</b>, then refresh. Your picks are still saved on this device meanwhile.`;
+      if (room) input.value = room;
       copyBtn.hidden = false;
+      leaveBtn.hidden = false;
+      joinBtn.textContent = "Retry";
+    } else if (enabled) {
+      const live = status.live !== false;
+      dot.className = live ? "sync-dot on" : "sync-dot ready";
+      stateLbl.textContent = live ? `live · trip “${room}”` : "connecting…";
+      msg.innerHTML = live
+        ? "You're synced! Picks and names update instantly on every device on this trip. Share the invite link (Copy below) — opening that link is how others join the <b>same</b> trip."
+        : "Connecting to the live trip…";
+      input.value = room;
+      copyBtn.hidden = !live;
       leaveBtn.hidden = false;
       joinBtn.textContent = "Switch trip";
     } else {
