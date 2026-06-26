@@ -73,21 +73,16 @@ Lets you both edit picks and watch them update live, across devices.
    you can skip Analytics).
 2. **Build → Firestore Database → Create database** → start in **production
    mode**, pick a region.
-3. In **Firestore → Rules**, paste this and **Publish** (open access limited to
-   trip docs — fine for a private hobby planner; tighten later if you like):
-   ```
-   rules_version = '2';
-   service cloud.firestore {
-     match /databases/{database}/documents {
-       match /trips/{room} {
-         allow read, write: if true;
-       }
-     }
-   }
-   ```
-4. **Project settings (gear) → General → Your apps → Web (`</>`)**. Register an
+3. **Build → Authentication → Get started → Sign-in method → Anonymous → Enable.**
+   This gives every visitor an identity (no login screen) so the security rules
+   below can require an authenticated user.
+4. In **Firestore → Rules**, paste the contents of **`firestore.rules`** (in this
+   repo) and **Publish**. These require sign-in, block enumerating other people's
+   trips, and block deletes — much safer than open access. Do step 3 *before*
+   publishing, or live sync will be denied until Anonymous auth is on.
+5. **Project settings (gear) → General → Your apps → Web (`</>`)**. Register an
    app; Firebase shows a `firebaseConfig` object. Copy it.
-5. In **`config.js`** set `firebase` to that object:
+6. In **`config.js`** set `firebase` to that object:
    ```js
    firebase: {
      apiKey: "AIza...",
