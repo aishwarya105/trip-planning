@@ -1,13 +1,13 @@
 // ─────────────────────────────────────────────────────────────────────────
 //  Türkiye Together — trip data
-//  All content is curated for a ~9-day September trip for two travelers:
+//  All content is curated for an ~8-night September trip for two travelers:
 //    • Traveler A: flying from San Francisco (SFO)  — US passport
 //    • Traveler B: flying from New Delhi (DEL)       — Indian passport
 //  Edit freely: prices are 2026 estimates, links go to live search pages.
 // ─────────────────────────────────────────────────────────────────────────
 
 const TRIP = {
-  defaultDates: { start: "2026-09-05", end: "2026-09-14" }, // 9 nights
+  defaultDates: { start: "2026-09-11", end: "2026-09-19" }, // 8 nights (arrive 11th night, depart 19th)
   meetCity: "Istanbul (IST)",
 };
 
@@ -131,7 +131,7 @@ const ACTIVITIES = [
   { id: "x-pamukkale", city: "Detour", icon: "♨️", type: "relax", cost: "$$", slot: "fullday", area: "Pamukkale", coords: [37.9203, 29.1206], title: "Pamukkale thermal terraces", desc: "Wade the white travertine pools above ancient Hierapolis — a full-day side trip." },
 ];
 
-// ── Suggested skeleton itinerary (9 nights) ───────────────────────────────
+// ── Suggested skeleton itinerary (8 nights) ───────────────────────────────
 // dayCount = how many sightseeing days that leg has. The scheduler spreads your
 // picks across these days (morning / afternoon / evening) and flags overflow.
 const ITINERARY = [
@@ -329,7 +329,7 @@ const IMG_PIN = {
   "ist-food": "https://commons.wikimedia.org/wiki/Special:FilePath/Lahmacun%20in%20Kadikoy.JPG?width=640",
 };
 
-// ── Budget (per person, medium tier, ~9 nights) ───────────────────────────
+// ── Budget (per person, medium tier, ~8 nights) ───────────────────────────
 const BUDGET = {
   a: { label: "Aishwarya (from SFO)", intlFlight: 1025 },
   b: { label: "Friend (from DEL)", intlFlight: 465 },
