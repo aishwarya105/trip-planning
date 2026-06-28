@@ -522,7 +522,7 @@ function renderBooking() {
     { id: "book-flight-a", label: `✈️ Book ${esc(state.names.a)}'s flight · SFO → IST`, link: FLIGHTS.a.search },
     { id: "book-flight-b", label: `✈️ Book ${esc(state.names.b)}'s flight · DEL → IST`, link: FLIGHTS.b.search },
     { id: "book-visa-b", label: `🛂 ${esc(state.names.b)}'s Türkiye visa (start early!)`, link: VISA.b.links[0].url },
-    { id: "book-hotels", label: `🏨 Book hotels · Istanbul, Cappadocia & Coast`, link: HOTELS[0].url },
+    { id: "book-hotels", label: `🏨 Book hotels · Istanbul & Cappadocia`, link: HOTELS[0].url },
     { id: "book-domestic", label: `🛫 Book 2 domestic hops between regions`, link: "https://www.google.com/travel/flights" },
   ];
   const actItems = acts.map((a) => ({ id: `book-${a.id}`, label: `${a.icon} ${esc(a.title)}${isMatched(a) ? " ✨" : ""}`, link: tourLink(a) }));
@@ -857,7 +857,7 @@ function renderItinerary() {
 let eatRegion = "all";
 let eatKind = "all";
 let eatSort = "default"; // "default" | "top" (highest-voted first)
-const REGION_ORDER = ["Istanbul", "Cappadocia", "Coast"];
+const REGION_ORDER = ["Istanbul", "Cappadocia"];
 const mapsLink = (s) =>
   "https://www.google.com/maps/search/?api=1&query=" +
   encodeURIComponent(`${s.name} ${s.area} Turkey`);

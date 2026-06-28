@@ -82,11 +82,10 @@ const FLIGHTS = {
 
 // Domestic hops inside Türkiye (book once you lock the itinerary)
 const DOMESTIC = {
-  note: "Cheap 1–1.5h hops on Turkish Airlines, Pegasus & AJet connect the three regions.",
+  note: "Cheap 1–1.5h hops on Turkish Airlines, Pegasus & AJet link Istanbul and Cappadocia.",
   legs: [
     { route: "Istanbul → Cappadocia (NAV/ASR)", price: "$45–80", time: "~1h 25m" },
-    { route: "Cappadocia → Antalya (AYT)", price: "$55–90", time: "~1h 15m" },
-    { route: "Antalya → Istanbul (IST/SAW)", price: "$45–80", time: "~1h 25m" },
+    { route: "Cappadocia → Istanbul (IST/SAW)", price: "$45–80", time: "~1h 25m" },
   ],
 };
 
@@ -116,32 +115,21 @@ const ACTIVITIES = [
   { id: "cap-atv", city: "Cappadocia", icon: "🏍️", type: "fun", cost: "$$", slot: "afternoon", timeHint: "Golden hour · ~5pm", area: "Göreme", coords: [38.6450, 34.8200], title: "ATV / horseback through valleys", desc: "Tear (or trot) through Love & Rose Valleys at golden hour." },
   { id: "cap-pottery", city: "Cappadocia", icon: "🏺", type: "fun", cost: "$", slot: "afternoon", area: "Avanos", coords: [38.7150, 34.8460], title: "Avanos pottery workshop", desc: "Throw a pot on a kick-wheel by the red Kızılırmak river." },
 
-  // Coast (Antalya / Fethiye / Oludeniz)
-  { id: "coast-lagoon", city: "Coast", icon: "🏖️", type: "relax", cost: "$", slot: "fullday", area: "Ölüdeniz", coords: [36.5500, 29.1160], title: "Ölüdeniz Blue Lagoon day", desc: "That turquoise postcard beach — swim, float, do nothing well." },
-  { id: "coast-paraglide", city: "Coast", icon: "🪂", type: "fun", cost: "$$$", slot: "morning", timeHint: "Morning winds", area: "Ölüdeniz", coords: [36.5530, 29.1300], title: "Paraglide off Babadağ", desc: "Run off a 1,900m mountain and soar over the lagoon. Adrenaline peak." },
-  { id: "coast-boat", city: "Coast", icon: "⛵", type: "both", cost: "$$", slot: "fullday", area: "Fethiye", coords: [36.6210, 29.1160], title: "Gulet boat & 12 islands cruise", desc: "Wooden yacht, swim stops in hidden coves, lunch on deck." },
-  { id: "coast-gorge", city: "Coast", icon: "🥾", type: "fun", cost: "$", slot: "morning", area: "Fethiye", coords: [36.4900, 29.4000], title: "Saklıkent Gorge hike", desc: "Wade through an icy slot canyon between towering walls — go before midday heat." },
-  { id: "coast-kaleici", city: "Coast", icon: "🍊", type: "relax", cost: "$", slot: "evening", area: "Antalya", coords: [36.8841, 30.7056], title: "Antalya old town (Kaleiçi)", desc: "Cobbled lanes, Roman harbour, orange trees and waterfront cafés — lovely at dusk." },
-  { id: "coast-spa", city: "Coast", icon: "💆", type: "relax", cost: "$$", slot: "afternoon", area: "Antalya", coords: [36.8770, 30.6390], title: "Beach club & spa afternoon", desc: "Day bed, sea, and a massage. The 'relaxation' half of the trip, sorted." },
-
   // Food & extras (region-flexible)
   { id: "x-cooking", city: "Anywhere", icon: "🍳", type: "both", cost: "$$", slot: "afternoon", area: "Sultanahmet", coords: [41.0082, 28.9784], title: "Turkish cooking class", desc: "Roll your own gözleme and master mezze with a local family." },
   { id: "x-raki", city: "Anywhere", icon: "🍢", type: "fun", cost: "$$", slot: "evening", area: "Beyoğlu", coords: [41.0305, 28.9770], title: "Meze & rakı dinner night", desc: "A long table of small plates and aniseed spirit — the Turkish way to dine." },
   { id: "x-wine", city: "Cappadocia", icon: "🍷", type: "relax", cost: "$$", slot: "evening", area: "Ürgüp", coords: [38.6310, 34.9130], title: "Cappadocia wine tasting", desc: "Türkiye's oldest wine region — volcanic-soil reds in a cave cellar." },
-  { id: "x-pamukkale", city: "Detour", icon: "♨️", type: "relax", cost: "$$", slot: "fullday", area: "Pamukkale", coords: [37.9203, 29.1206], title: "Pamukkale thermal terraces", desc: "Wade the white travertine pools above ancient Hierapolis — a full-day side trip." },
 ];
 
 // ── Suggested skeleton itinerary (8 nights) ───────────────────────────────
 // dayCount = how many sightseeing days that leg has. The scheduler spreads your
 // picks across these days (morning / afternoon / evening) and flags overflow.
 const ITINERARY = [
-  { day: "Days 1–4", city: "Istanbul", tag: "Arrive & explore", activityCities: ["Istanbul", "Anywhere"], dayCount: 3,
-    blurb: "Meet in Istanbul, beat jet-lag with a hammam, then dive into the old city, bazaars and a Bosphorus cruise." },
-  { day: "Days 4–6", city: "Cappadocia", tag: "Wonder", activityCities: ["Cappadocia"], dayCount: 2,
-    blurb: "Short flight to a cave hotel. Sunrise balloon, valley rides and pottery before a vineyard sunset." },
-  { day: "Days 6–9", city: "Coast", tag: "Relax", activityCities: ["Coast", "Detour"], dayCount: 3,
-    blurb: "Fly to the Mediterranean for beach days, a gulet cruise and slow evenings in Antalya's old town." },
-  { day: "Day 9–10", city: "Home", tag: "Fly out", activityCities: [], dayCount: 0,
+  { day: "Days 1–5", city: "Istanbul", tag: "Arrive & explore", activityCities: ["Istanbul", "Anywhere"], dayCount: 4,
+    blurb: "Meet in Istanbul, beat jet-lag with a hammam, then dive into the old city, bazaars, the Bosphorus and Beyoğlu's rooftops." },
+  { day: "Days 5–8", city: "Cappadocia", tag: "Wonder", activityCities: ["Cappadocia"], dayCount: 3,
+    blurb: "Short flight to a cave hotel. Sunrise balloon, valley rides, pottery and a vineyard sunset — the unforgettable half." },
+  { day: "Day 8–9", city: "Home", tag: "Fly out", activityCities: [], dayCount: 0,
     blurb: "Hop back to Istanbul and fly home — Aishwarya west to SFO, friend east to DEL." },
 ];
 
@@ -153,15 +141,12 @@ const HOTELS = [
   { city: "Cappadocia", icon: "🪨", style: "Cave hotel in Göreme / Uçhisar", price: "$130–200 / night",
     desc: "Rooms carved in stone with a terrace facing the balloons at dawn.",
     url: "https://www.booking.com/searchresults.html?ss=Goreme%2C+Cappadocia&nflt=class%3D4" },
-  { city: "Coast", icon: "🌊", style: "Sea-view boutique in Antalya / Fethiye", price: "$110–170 / night",
-    desc: "Pool or beach access, an easy base for boat trips and lazy mornings.",
-    url: "https://www.booking.com/searchresults.html?ss=Antalya%2C+Turkey&nflt=class%3D4" },
 ];
 
 // ── Eat & drink (curated, top-rated picks per region) ─────────────────────
 // Hand-picked from current top-rated/most-recommended spots (2025). Each links
 // to a Google Maps search so you get live ratings, hours, photos & directions.
-//   city: "Istanbul" | "Cappadocia" | "Coast"
+//   city: "Istanbul" | "Cappadocia"
 //   kind: "eat" (restaurant) | "drink" (bar / pub / wine house)
 const FOODSPOTS = [
   // ── Istanbul · eat ──
@@ -211,28 +196,6 @@ const FOODSPOTS = [
     blurb: "Friendly, unfussy and a traveller classic — easy drinks and good company." },
   { id: "f-cap-kocabag", city: "Cappadocia", kind: "drink", name: "Kocabağ Winery terrace", area: "Uçhisar / Ürgüp", cuisine: "Wine tasting", cost: "$$",
     blurb: "Sample award-winning Anatolian wines on a terrace over the vineyards — fits a relaxed afternoon." },
-
-  // ── Coast (Antalya & Fethiye) · eat ──
-  { id: "f-coast-seraser", city: "Coast", kind: "eat", name: "Seraser Fine Dining", area: "Antalya · Kaleiçi", cuisine: "Fine dining", cost: "$$$",
-    blurb: "Modern plates with traditional touches inside a 300-year-old mansion — Kaleiçi's date-night pick." },
-  { id: "f-coast-arma", city: "Coast", kind: "eat", name: "Arma Restaurant", area: "Antalya · Kaleiçi harbour", cuisine: "Seafood · Mediterranean", cost: "$$$",
-    blurb: "Seafront perch over the old harbour with famed mezes and the freshest fish." },
-  { id: "f-coast-balikci", city: "Coast", kind: "eat", name: "Balıkçı Meyhanesi", area: "Antalya · Kaleiçi", cuisine: "Meyhane · seafood", cost: "$$",
-    blurb: "Locals' favourite for fish and rakı in a cosy, tucked-away corner of the old town." },
-  { id: "f-coast-yemenli", city: "Coast", kind: "eat", name: "Yemenli Meyhanesi", area: "Antalya · Kaleiçi", cuisine: "Meyhane · grills & seafood", cost: "$$",
-    blurb: "Everything from grilled octopus to tiger prawns, with live music most nights." },
-  { id: "f-coast-fishmarket", city: "Coast", kind: "eat", name: "Fethiye Fish Market", area: "Fethiye", cuisine: "Buy-&-cook seafood", cost: "$$",
-    blurb: "Pick your fish from the central market stalls; the ring of restaurants grills it for a small fee. A fun, fresh ritual." },
-
-  // ── Coast (Antalya & Fethiye) · drink ──
-  { id: "f-coast-sheffield", city: "Coast", kind: "drink", name: "Sheffield Pub", area: "Antalya · Kaleiçi", cuisine: "Irish-style pub", cost: "$$",
-    blurb: "Guinness, craft beer and whisky in cosy dark-wood rooms — a reliable Kaleiçi hang." },
-  { id: "f-coast-tudors", city: "Coast", kind: "drink", name: "Tudors Pub", area: "Antalya · Kaleiçi", cuisine: "Live-music pub", cost: "$$",
-    blurb: "Buzzy nightly live music where locals and visitors mix. Right in the old-town lanes." },
-  { id: "f-coast-barstreet", city: "Coast", kind: "drink", name: "Paspatur Bar Street", area: "Fethiye · old town", cuisine: "Nightlife strip", cost: "$",
-    blurb: "Cobbled lane packed with bars and meyhanes — wander in and bar-hop. The heart of Fethiye nights." },
-  { id: "f-coast-deepblue", city: "Coast", kind: "drink", name: "Deep Blue Bar", area: "Fethiye", cuisine: "Live-music bar", cost: "$$",
-    blurb: "Long-running local favourite for live music, sports nights and an easy crowd." },
 ];
 
 // ── Card images (keyword → photo) ─────────────────────────────────────────
