@@ -2,7 +2,7 @@
 
 A collaborative planner for a **September 2026 trip to Türkiye** for two friends —
 one flying from **San Francisco**, one from **New Delhi** — meeting in Istanbul for
-~9 nights of fun *and* relaxation on a medium budget.
+~8 nights of fun *and* relaxation on a medium budget.
 
 It's a zero-dependency static website: just open it in a browser.
 
@@ -18,7 +18,7 @@ It's a zero-dependency static website: just open it in a browser.
   🌿 relax. Each of you marks what you want; anything you *both* pick lights up gold ✨.
 - **Share without accounts** — generate a link with your picks encoded in it, send it
   to your friend, and their page merges them automatically.
-- **Live itinerary** — a 9-night Istanbul → Cappadocia → Coast loop that fills in with
+- **Live itinerary** — an 8-night Istanbul → Cappadocia → Coast loop that fills in with
   your picks as you go.
 - **Stay & budget** — nice-ish 4★ hotel ideas and a per-person budget breakdown.
 
