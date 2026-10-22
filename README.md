@@ -53,3 +53,11 @@ The site is fully static, so it works as-is.
 
 > Prices, fares and visa rules are 2026 estimates for convenience — always confirm on
 > the official sites linked in the app before booking.
+
+## 💪 Workout picker (`/workout/`)
+
+A separate mini-app in [`workout/`](workout/): pick **Me** or **Baby**, choose how much
+time you have and whether you're sore, and it recommends a workout — steering toward
+muscle groups you haven't trained this week and away from ones that are sore or were
+worked in the last ~48 hours. Tap **I did this** to log it; the week view shows what's
+been covered. Workouts live in `workout/workouts.js`.

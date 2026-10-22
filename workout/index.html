@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Daily Workout Picker</title>
+  <meta name="description" content="Recommends today's workout based on your time, soreness and what you've already done this week." />
+  <meta name="theme-color" content="#1f2a44" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Workout" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💪</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="wrap">
+    <header class="top">
+      <h1>💪 Today's Workout</h1>
+      <div id="people" class="chips people" role="group" aria-label="Who's working out"></div>
+    </header>
+
+    <section class="card controls">
+      <div class="field">
+        <span class="label">How much time do you have? <small>(minutes)</small></span>
+        <div id="time" class="chips" role="group"></div>
+      </div>
+      <div class="field">
+        <span class="label">How are you feeling?</span>
+        <div id="soreness" class="chips" role="group"></div>
+      </div>
+      <div class="field" id="sore-where" hidden>
+        <span class="label">Where are you sore?</span>
+        <div id="sore-muscles" class="chips small" role="group"></div>
+      </div>
+    </section>
+
+    <section class="card pick" id="pick" aria-live="polite"></section>
+
+    <section class="card">
+      <div class="section-head">
+        <h3>This week</h3>
+        <span id="week-summary" class="meta"></span>
+      </div>
+      <div id="days" class="days"></div>
+      <div id="coverage" class="coverage"></div>
+      <p class="legend"><span class="sw none"></span> not yet <span class="sw one"></span> once <span class="sw many"></span> 2+</p>
+    </section>
+
+    <section class="card">
+      <div class="section-head">
+        <h3>Recent workouts</h3>
+        <button class="btn small" id="open-log">＋ Log a workout</button>
+      </div>
+      <ul id="history" class="history"></ul>
+    </section>
+
+    <section class="card">
+      <details>
+        <summary><h3 class="inline">All workouts</h3></summary>
+        <div id="library" class="library"></div>
+      </details>
+    </section>
+
+    <footer class="foot">
+      <button class="btn small" id="export">⬇ Back up log</button>
+      <label class="btn small">⬆ Restore backup<input type="file" id="import" accept="application/json" hidden /></label>
+      <p class="meta">Your log is saved on this device.</p>
+    </footer>
+  </main>
+
+  <dialog id="log-dialog">
+    <form id="log-form">
+      <h3>Log a workout</h3>
+      <label class="field">
+        <span class="label">Workout</span>
+        <select id="log-workout"></select>
+      </label>
+      <div id="custom-fields">
+        <label class="field"><span class="label">Name</span><input id="log-name" placeholder="e.g. Spin class" /></label>
+        <label class="field"><span class="label">Minutes</span><input id="log-minutes" type="number" min="0" inputmode="numeric" value="30" /></label>
+        <div class="field"><span class="label">Muscle groups</span><div id="log-muscles" class="checks"></div></div>
+      </div>
+      <label class="field"><span class="label">Date</span><input id="log-date" type="date" /></label>
+      <div class="actions">
+        <button type="submit" class="btn primary">Save</button>
+        <button type="button" class="btn" id="close-log">Cancel</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="workouts.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
