@@ -124,6 +124,10 @@ small { color: var(--ink-soft); font-weight: 400; }
 .exercises li:last-child { border-bottom: none; }
 .exercises li > span:first-child { font-weight: 600; }
 .exercises .detail { float: right; color: var(--ink-soft); font-size: .88rem; margin-left: 12px; }
+.program { margin: 4px 0 0; color: var(--accent); font-size: .82rem; font-weight: 600; }
+.structure { background: var(--bg); border-radius: 10px; padding: 8px 12px; font-size: .86rem; color: var(--ink-soft); margin: 0 0 10px; }
+.lib-program { border-top: 1px solid var(--line); padding: 10px 0; }
+.lib-program .lib { margin-left: 12px; }
 .source { color: var(--ink-soft); font-size: .78rem; margin: 10px 0 0; }
 
 .alts { margin-top: 14px; }

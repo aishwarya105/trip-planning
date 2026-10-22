@@ -30,7 +30,7 @@ window.MUSCLES = {
 window.WORKOUTS = [
   {
     id: "upper-push-30", name: "Upper Body Push", minutes: 30, intensity: 2, type: "strength",
-    muscles: ["chest", "shoulders", "arms"], source: "Starter",
+    muscles: ["chest", "shoulders", "arms"], program: "Starter",
     exercises: [
       { name: "Push-ups", detail: "3 × 10–12" },
       { name: "Dumbbell shoulder press", detail: "3 × 10" },
@@ -41,7 +41,7 @@ window.WORKOUTS = [
   },
   {
     id: "upper-pull-30", name: "Upper Body Pull", minutes: 30, intensity: 2, type: "strength",
-    muscles: ["back", "arms", "shoulders"], source: "Starter",
+    muscles: ["back", "arms", "shoulders"], program: "Starter",
     exercises: [
       { name: "Bent-over dumbbell rows", detail: "3 × 10" },
       { name: "Single-arm rows", detail: "3 × 10 each" },
@@ -52,7 +52,7 @@ window.WORKOUTS = [
   },
   {
     id: "lower-strength-40", name: "Lower Body Strength", minutes: 40, intensity: 3, type: "strength",
-    muscles: ["quads", "glutes", "hamstrings"], source: "Starter",
+    muscles: ["quads", "glutes", "hamstrings"], program: "Starter",
     exercises: [
       { name: "Goblet squats", detail: "4 × 10" },
       { name: "Romanian deadlifts", detail: "4 × 10" },
@@ -63,7 +63,7 @@ window.WORKOUTS = [
   },
   {
     id: "glutes-hams-25", name: "Glutes & Hamstrings", minutes: 25, intensity: 2, type: "strength",
-    muscles: ["glutes", "hamstrings"], source: "Starter",
+    muscles: ["glutes", "hamstrings"], program: "Starter",
     exercises: [
       { name: "Glute bridges", detail: "3 × 15" },
       { name: "Single-leg RDL", detail: "3 × 8 each" },
@@ -74,7 +74,7 @@ window.WORKOUTS = [
   },
   {
     id: "quads-15", name: "Quick Leg Burner", minutes: 15, intensity: 2, type: "strength",
-    muscles: ["quads", "glutes"], source: "Starter",
+    muscles: ["quads", "glutes"], program: "Starter",
     exercises: [
       { name: "Bodyweight squats", detail: "3 × 20" },
       { name: "Walking lunges", detail: "3 × 10 each" },
@@ -83,7 +83,7 @@ window.WORKOUTS = [
   },
   {
     id: "core-15", name: "Core Crusher", minutes: 15, intensity: 2, type: "strength",
-    muscles: ["core"], source: "Starter",
+    muscles: ["core"], program: "Starter",
     exercises: [
       { name: "Plank", detail: "3 × 45s" },
       { name: "Dead bugs", detail: "3 × 10 each" },
@@ -93,7 +93,7 @@ window.WORKOUTS = [
   },
   {
     id: "core-10", name: "10-Min Abs", minutes: 10, intensity: 1, type: "strength",
-    muscles: ["core"], source: "Starter",
+    muscles: ["core"], program: "Starter",
     exercises: [
       { name: "Crunches", detail: "40s on / 20s off" },
       { name: "Leg raises", detail: "40s on / 20s off" },
@@ -104,7 +104,7 @@ window.WORKOUTS = [
   },
   {
     id: "full-body-45", name: "Full Body Strength", minutes: 45, intensity: 3, type: "strength",
-    muscles: ["chest", "back", "quads", "glutes", "core", "shoulders"], source: "Starter",
+    muscles: ["chest", "back", "quads", "glutes", "core", "shoulders"], program: "Starter",
     exercises: [
       { name: "Squats", detail: "3 × 12" },
       { name: "Push-ups", detail: "3 × 10" },
@@ -116,7 +116,7 @@ window.WORKOUTS = [
   },
   {
     id: "full-body-20", name: "Express Full Body", minutes: 20, intensity: 2, type: "strength",
-    muscles: ["chest", "back", "quads", "core"], source: "Starter",
+    muscles: ["chest", "back", "quads", "core"], program: "Starter",
     exercises: [
       { name: "Circuit × 3: Squats", detail: "12" },
       { name: "Push-ups", detail: "10" },
@@ -126,7 +126,7 @@ window.WORKOUTS = [
   },
   {
     id: "hiit-20", name: "HIIT Sweat", minutes: 20, intensity: 3, type: "hiit",
-    muscles: ["cardio", "quads", "core"], source: "Starter",
+    muscles: ["cardio", "quads", "core"], program: "Starter",
     exercises: [
       { name: "Jumping jacks", detail: "40s on / 20s off" },
       { name: "Burpees", detail: "40s on / 20s off" },
@@ -137,19 +137,19 @@ window.WORKOUTS = [
   },
   {
     id: "cardio-30", name: "Steady Cardio", minutes: 30, intensity: 2, type: "cardio",
-    muscles: ["cardio"], source: "Starter",
+    muscles: ["cardio"], program: "Starter",
     exercises: [
       { name: "Brisk walk / jog / bike", detail: "30 min, conversational pace" },
     ],
   },
   {
     id: "walk-20", name: "Recovery Walk", minutes: 20, intensity: 1, type: "cardio",
-    muscles: ["cardio"], source: "Starter",
+    muscles: ["cardio"], program: "Starter",
     exercises: [{ name: "Easy outdoor walk", detail: "20 min" }],
   },
   {
     id: "mobility-15", name: "Mobility & Stretch", minutes: 15, intensity: 1, type: "mobility",
-    muscles: [], source: "Starter",
+    muscles: [], program: "Starter",
     exercises: [
       { name: "Cat-cow", detail: "1 min" },
       { name: "World's greatest stretch", detail: "1 min each side" },
@@ -160,7 +160,7 @@ window.WORKOUTS = [
   },
   {
     id: "yoga-30", name: "Gentle Yoga Flow", minutes: 30, intensity: 1, type: "mobility",
-    muscles: ["core"], source: "Starter",
+    muscles: ["core"], program: "Starter",
     exercises: [
       { name: "Sun salutations", detail: "5 rounds" },
       { name: "Warrior I / II flow", detail: "5 min" },

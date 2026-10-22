@@ -16,13 +16,19 @@
     minutes: 30,
     soreness: 0,
     soreMuscles: [],
+    place: "gym",
+    programs: { me: [], baby: [] }, // empty = all programs
     logs: { me: [], baby: [] },
   };
 
   function load() {
     try {
       const saved = JSON.parse(localStorage.getItem(STORE_KEY));
-      if (saved) return { ...defaults, ...saved, logs: { ...defaults.logs, ...saved.logs } };
+      if (saved) return {
+        ...defaults, ...saved,
+        logs: { ...defaults.logs, ...saved.logs },
+        programs: { ...defaults.programs, ...saved.programs },
+      };
     } catch (_) { /* storage unavailable — start fresh */ }
     return structuredClone(defaults);
   }
@@ -89,7 +95,11 @@
 
     // Favour muscle groups you haven't hit this week.
     const fresh = w.muscles.filter((m) => stats[m].count === 0);
-    for (const m of w.muscles) score += 18 / (stats[m].count + 1);
+    // Average (not sum) so total-body days don't win just by tagging everything.
+    if (w.muscles.length) {
+      const neglect = w.muscles.reduce((s, m) => s + 1 / (stats[m].count + 1), 0) / w.muscles.length;
+      score += neglect * 30 + Math.min(fresh.length, 3) * 6;
+    }
     if (fresh.length) reasons.push(`Hits ${listLabels(fresh)} — not worked yet this week`);
 
     // Muscles need ~48h to recover.
@@ -123,11 +133,24 @@
   }
 
   function recommend() {
-    const pool = WORKOUTS.filter((w) => !w.for || w.for.includes(state.person));
+    const pool = availableWorkouts();
     const stats = muscleStats();
     let fits = pool.filter((w) => w.minutes <= state.minutes);
     if (!fits.length) fits = [pool.reduce((a, b) => (a.minutes <= b.minutes ? a : b))];
     return fits.map((w) => scoreWorkout(w, stats)).sort((a, b) => b.score - a.score);
+  }
+
+  const HOME_GEAR = new Set(["bodyweight", "dumbbells", "bench", "band", "pullup-bar", "other"]);
+  const PROGRAMS = [...new Set(WORKOUTS.map((w) => w.program || "Starter"))];
+  const programOf = (w) => w.program || "Starter";
+
+  function availableWorkouts() {
+    const chosen = state.programs[state.person];
+    const pool = WORKOUTS.filter((w) =>
+      (!w.for || w.for.includes(state.person)) &&
+      (!chosen.length || chosen.includes(programOf(w))) &&
+      (state.place === "gym" || (w.equipment || []).every((e) => HOME_GEAR.has(e))));
+    return pool.length ? pool : WORKOUTS;
   }
 
   // ── Actions ──────────────────────────────────────────────────────────
@@ -169,6 +192,15 @@
         if (v === 0) state.soreMuscles = [];
         skipped = []; save(); render();
       });
+    chips($("#place"), [{ value: "gym", label: "🏋️ Gym" }, { value: "home", label: "🏠 Home" }],
+      (v) => v === state.place, (v) => { state.place = v; skipped = []; save(); render(); });
+    const chosen = state.programs[state.person];
+    chips($("#programs"), [{ value: "", label: "All" }, ...PROGRAMS.map((p) => ({ value: p, label: p }))],
+      (v) => (v === "" ? !chosen.length : chosen.includes(v)), (v) => {
+        const s = new Set(chosen);
+        if (v === "") s.clear(); else s.has(v) ? s.delete(v) : s.add(v);
+        state.programs[state.person] = [...s]; skipped = []; save(); render();
+      });
     $("#sore-where").hidden = state.soreness === 0;
     chips($("#sore-muscles"),
       Object.entries(MUSCLES).filter(([k]) => k !== "cardio").map(([value, m]) => ({ value, label: `${m.emoji} ${m.label}` })),
@@ -194,6 +226,7 @@
           <p class="eyebrow">Today's pick for ${PEOPLE[state.person]}</p>
           <h2>${esc(w.name)}</h2>
           <p class="meta">⏱ ${w.minutes} min · ${esc(w.type)} · ${intensityDots(w.intensity)}</p>
+          ${w.program ? `<p class="program">${esc(w.program)}${w.phase ? ` · ${esc(w.phase)}` : ""}${w.sample ? ` · ${esc(w.sample)}` : ""}</p>` : ""}
         </div>
       </div>
       <div class="tags">${muscleTags(w.muscles)}</div>
@@ -201,10 +234,11 @@
         ${top.reasons.map((r) => `<li class="good">✓ ${esc(r)}</li>`).join("")}
         ${top.warnings.map((r) => `<li class="warn">⚠ ${esc(r)}</li>`).join("")}
       </ul>
+      ${w.structure ? `<p class="structure">${esc(w.structure)}</p>` : ""}
+      ${w.equipment?.length ? `<p class="meta">🧰 ${esc(w.equipment.join(", "))}</p>` : ""}
       <ol class="exercises">
         ${w.exercises.map((e) => `<li><span>${esc(e.name)}</span><span class="detail">${esc(e.detail)}</span></li>`).join("")}
       </ol>
-      ${w.source ? `<p class="source">From: ${esc(w.source)}</p>` : ""}
       <div class="actions">
         <button class="btn primary" id="done">✅ I did this</button>
         <button class="btn" id="another" ${rest.length ? "" : "disabled"}>🔀 Show another</button>
@@ -212,7 +246,7 @@
       ${rest.length ? `<details class="alts"><summary>Other good options (${Math.min(rest.length, 4)})</summary>
         ${rest.slice(0, 4).map((r) => `
           <button class="alt" data-id="${r.workout.id}">
-            <strong>${esc(r.workout.name)}</strong>
+            <strong>${esc(r.workout.name)}${r.workout.program ? ` <small>· ${esc(r.workout.program)}</small>` : ""}</strong>
             <span>${r.workout.minutes} min · ${r.workout.muscles.map((m) => MUSCLES[m].emoji).join(" ") || "🧘"}</span>
           </button>`).join("")}
       </details>` : ""}`;
@@ -277,18 +311,23 @@
   function renderLogForm() {
     const sel = $("#log-workout");
     sel.innerHTML = `<option value="">Something else (custom)…</option>` +
-      WORKOUTS.map((w) => `<option value="${w.id}">${esc(w.name)} · ${w.minutes} min</option>`).join("");
+      PROGRAMS.map((p) => `<optgroup label="${esc(p)}">${WORKOUTS.filter((w) => programOf(w) === p)
+        .map((w) => `<option value="${w.id}">${esc(w.name)} · ${w.minutes} min</option>`).join("")}</optgroup>`).join("");
     $("#log-muscles").innerHTML = Object.entries(MUSCLES).map(([k, m]) =>
       `<label class="check"><input type="checkbox" value="${k}" /> ${m.emoji} ${m.label}</label>`).join("");
     $("#log-date").value = todayKey();
   }
 
   function renderLibrary() {
-    $("#library").innerHTML = WORKOUTS.map((w) => `
+    $("#library").innerHTML = PROGRAMS.map((p) => `
+      <details class="lib-program"><summary><strong>${esc(p)}</strong> <span class="meta">${WORKOUTS.filter((w) => programOf(w) === p).length} workouts</span></summary>
+      ${WORKOUTS.filter((w) => programOf(w) === p).map((w) => `
       <details class="lib">
         <summary><strong>${esc(w.name)}</strong> <span class="meta">${w.minutes} min · ${intensityDots(w.intensity)}</span></summary>
         <div class="tags">${muscleTags(w.muscles)}</div>
+        ${w.structure ? `<p class="structure">${esc(w.structure)}</p>` : ""}
         <ol class="exercises">${w.exercises.map((e) => `<li><span>${esc(e.name)}</span><span class="detail">${esc(e.detail)}</span></li>`).join("")}</ol>
+      </details>`).join("")}
       </details>`).join("");
   }
 
